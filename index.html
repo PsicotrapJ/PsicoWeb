@@ -1,58 +1,62 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Pasillo Psicotrap — Shorts</title>
+<!-- ======= PASILLO 3D — PERSPECTIVA, TECHO/PISO, GIRO COMPLETO ======= -->
+<section class="corridor" id="corridor">
+  <div class="camera" id="camera">
+    <div class="scene" id="scene"></div>
+  </div>
+  <div class="hud">
+    ↑/↓ (W/S) avanzar · ←/→ (A/D) girar · mouse mira · <b>clic derecho</b> o <b>Shift+arrastrar</b> para girar libre · <b>Espacio</b> encarar panel
+  </div>
+</section>
+
 <style>
   :root{ --bg1:#121a3a; --bg2:#0c122c; --bg3:#070b16; --glowC:#00f0ff; --glowF:#ff1fd8; }
-  html,body{margin:0;height:100%;background:#05070e;color:#e8ecff;font-family:system-ui,Segoe UI,Roboto,Inter,Arial}
-  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:16px}
-
-  /* PASILLO */
   .corridor{
     position:relative; height:90vh; width:min(1200px,95vw);
-    border-radius:18px; overflow:hidden; perspective:1200px;
-    background: radial-gradient(1600px 1000px at 50% 18%, var(--bg1) 0%, var(--bg2) 45%, var(--bg3) 80%);
-    box-shadow: 0 24px 70px rgba(0,0,0,.55), inset 0 0 200px rgba(255,31,216,.10), inset 0 0 200px rgba(0,240,255,.10);
+    margin:24px auto; border-radius:18px; overflow:hidden;
+    /* perspectiva más fuerte */
+    perspective: 800px;
+    background: radial-gradient(1600px 1000px at 50% 18%, var(--bg1) 0%, var(--bg2) 45%, var(--bg3) 85%);
+    box-shadow: 0 24px 70px rgba(0,0,0,.6),
+                inset 0 0 220px rgba(255,31,216,.12),
+                inset 0 0 220px rgba(0,240,255,.10);
     user-select:none; touch-action:none;
   }
-  .corridor::before,.corridor::after{
-    content:""; position:absolute; left:0; right:0; height:40%; pointer-events:none; mix-blend-mode:screen;
-  }
-  .corridor::before{top:-10%; background:linear-gradient(180deg, rgba(0,240,255,.10), rgba(0,0,0,0));}
-  .corridor::after{bottom:-10%; background:linear-gradient(0deg, rgba(255,31,216,.12), rgba(0,0,0,0));}
+  .camera{ position:absolute; inset:0; transform-style:preserve-3d; will-change:transform; }
+  .scene { position:absolute; inset:0; transform-style:preserve-3d; will-change:transform; }
 
-  .camera{position:absolute; inset:0; transform-style:preserve-3d; will-change:transform;}
-  .scene {position:absolute; inset:0; transform-style:preserve-3d; will-change:transform;}
-
+  /* paneles “puerta” */
   .panel{
     position:absolute; transform-style:preserve-3d;
     width:22vw; max-width:320px; aspect-ratio:9/16; border-radius:14px; overflow:hidden;
     background:#0b0f1c;
-    box-shadow: 0 10px 30px rgba(0,0,0,.55),
-                inset 0 0 30px rgba(255,31,216,.28),
-                inset 0 0 30px rgba(0,240,255,.24);
+    box-shadow: 0 12px 38px rgba(0,0,0,.55),
+                inset 0 0 36px rgba(255,31,216,.30),
+                inset 0 0 36px rgba(0,240,255,.26);
   }
   .panel::before{
     content:""; position:absolute; inset:0; border-radius:inherit; border:2px solid rgba(255,255,255,.06);
-    box-shadow: 0 0 18px rgba(0,240,255,.35), 0 0 44px rgba(255,31,216,.28), inset 0 0 30px rgba(0,0,0,.6);
+    box-shadow: 0 0 22px rgba(0,240,255,.4), 0 0 52px rgba(255,31,216,.34), inset 0 0 34px rgba(0,0,0,.65);
     pointer-events:none;
   }
-  .panel iframe, .panel .img{position:absolute; inset:0; width:100%; height:100%; border:0; background:#000;}
+  .panel iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; background:#000; }
 
-  .hud{position:absolute; bottom:10px; width:100%; text-align:center; font-size:12px; opacity:.85; pointer-events:none;text-shadow:0 2px 8px rgba(0,0,0,.7)}
-  .speed-blur{filter:blur(1px) saturate(115%)}
-  @media(max-width:800px){ .panel{ width:36vw; } }
+  /* piso y techo con grid */
+  .plane{
+    position:absolute; left:50%; top:50%; width:4200px; height:4200px;
+    transform-style:preserve-3d; pointer-events:none; opacity:.9;
+    background:
+      radial-gradient(1200px 800px at 50% 50%, rgba(0,240,255,.08), rgba(255,31,216,.06), rgba(0,0,0,0) 70%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 2px, transparent 2px 60px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 60px);
+    filter: blur(.2px);
+  }
+  .plane.floor{ transform: translate3d(-50%,-50%, -200px) rotateX(90deg); box-shadow: 0 -40px 120px rgba(0,0,0,.7) inset; }
+  .plane.ceiling{ transform: translate3d(-50%,-50%, -200px) rotateX(-90deg); opacity:.6; }
+
+  .hud{ position:absolute; bottom:10px; width:100%; text-align:center; font-size:12px; opacity:.9; color:#e8ecff; text-shadow:0 2px 8px rgba(0,0,0,.75); pointer-events:none; }
+  .speed-blur{ filter: blur(1px) saturate(115%); }
+  @media (max-width:800px){ .panel{ width:36vw; } }
 </style>
-</head>
-<body>
-<div class="wrap">
-  <section class="corridor" id="corridor">
-    <div class="camera" id="camera"><div class="scene" id="scene"></div></div>
-    <div class="hud">Scroll / ↑ ↓ para avanzar — mové el mouse para mirar a los lados (drag/touch también)</div>
-  </section>
-</div>
 
 <script>
 (function(){
@@ -62,21 +66,26 @@
 
   const corridor = document.getElementById('corridor');
   const cameraEl = document.getElementById('camera');
-  const scene = document.getElementById('scene');
+  const scene    = document.getElementById('scene');
 
-  /* Geometría del pasillo */
-  const spacingZ = 1400;           // separación entre “puertas”
-  const doorX    = 520;             // distancia lateral
-  const count = Math.max(LEFT_VIDEOS.length, RIGHT_VIDEOS.length);
+  /* ===== Pisos/techos ===== */
+  const floor   = document.createElement('div'); floor.className   = 'plane floor';
+  const ceiling = document.createElement('div'); ceiling.className = 'plane ceiling';
+  scene.appendChild(floor); scene.appendChild(ceiling);
 
-  /* Construcción de paneles */
+  /* ===== Geometría del pasillo ===== */
+  const spacingZ = 1400;          // distancia entre puertas
+  const doorX    = 520;           // distancia lateral
+  const count    = Math.max(LEFT_VIDEOS.length, RIGHT_VIDEOS.length);
+
+  /* ===== Crear paneles ===== */
   const panels = [];
   function addPanel(side, i, id){
     const el = document.createElement('div');
     el.className = 'panel';
     const z = -i * spacingZ;
     const x = (side==='L' ? -doorX : doorX);
-    const rotY = (side==='L' ? 90 : -90);
+    const rotY = (side==='L' ? 90 : -90);  // miran al centro
     el.style.transform = `translate3d(${x}px,0,${z}px) rotateY(${rotY}deg)`;
     el.dataset.z = z; el.dataset.side = side;
 
@@ -93,68 +102,92 @@
     addPanel('R', i, RIGHT_VIDEOS[i % RIGHT_VIDEOS.length]);
   }
 
-  /* === Movimiento continuo (fluido) === */
-  let cameraZ = 0;     // posición
-  let speedZ  = 0;     // velocidad con inercia
+  /* ===== Movimiento fluido + head tracking ===== */
+  let cameraZ = 0, speedZ = 0;
   const FRICTION = 0.92;
-  const IMPULSE_SCROLL = 0.20; // sensibilidad del scroll
-  const IMPULSE_KEYS   = 40;   // impulso con flechas/W/S
+  const IMP_SCROLL = 0.22, IMP_KEYS = 42;
 
-  // Head tracking con easing
-  const look = { maxYaw:10, maxPitch:6, maxRoll:3, strafe:90, ease:0.085 };
+  // mirar/girar
+  const look = {
+    maxYaw: 85,        // ←→ giro máximo (para ver de FRENTE los paneles)
+    maxPitch: 8,       // arriba/abajo
+    maxRoll: 4,
+    strafe: 120,       // parallax lateral
+    ease: 0.09
+  };
   let yaw=0,pitch=0,roll=0,strafe=0, tyaw=0,tpitch=0,troll=0,tstrafe=0;
 
-  // Impulsos (scroll / teclas)
-  corridor.addEventListener('wheel', e=>{ speedZ += -e.deltaY * IMPULSE_SCROLL; }, {passive:true});
+  // scroll = impulso
+  corridor.addEventListener('wheel', e=>{ speedZ += -e.deltaY * IMP_SCROLL; }, {passive:true});
+  // teclas avanzar/retroceder + girar
   window.addEventListener('keydown', e=>{
-    const k = e.key.toLowerCase();
-    if(k==='arrowup'||k==='w') speedZ -= IMPULSE_KEYS;
-    if(k==='arrowdown'||k==='s') speedZ += IMPULSE_KEYS;
+    const k=e.key.toLowerCase();
+    if(k==='arrowup'||k==='w') speedZ -= IMP_KEYS;
+    if(k==='arrowdown'||k==='s') speedZ += IMP_KEYS;
+    if(k==='arrowleft'||k==='a') tyaw = Math.min(look.maxYaw, tyaw + 8);
+    if(k==='arrowright'||k==='d') tyaw = Math.max(-look.maxYaw, tyaw - 8);
+    if(k===' ') snapFaceNearest(); // encarar el panel más cercano
   });
 
-  // Drag/touch para avanzar
-  let dragging=false, lastY=0;
-  corridor.addEventListener('pointerdown', e=>{ dragging=true; lastY=e.clientY; corridor.setPointerCapture?.(e.pointerId); });
-  window.addEventListener('pointermove', e=>{
-    if(dragging){ const dy=e.clientY-lastY; lastY=e.clientY; speedZ += dy*0.9; }
-    // head tracking
-    const r = corridor.getBoundingClientRect();
-    const nx = (e.clientX-r.left)/r.width*2-1, ny = (e.clientY-r.top)/r.height*2-1;
-    tyaw   = -nx*look.maxYaw;
-    tpitch =  ny*look.maxPitch;
-    troll  = -nx*look.maxRoll*0.8;
-    tstrafe=  nx*look.strafe;
+  // head-tracking con mouse (suave, no llega a ±85 por sí solo)
+  window.addEventListener('mousemove', e=>{
+    const r=corridor.getBoundingClientRect();
+    const nx=(e.clientX-r.left)/r.width*2-1, ny=(e.clientY-r.top)/r.height*2-1;
+    tpitch =  ny*look.maxPitch*0.6;
+    tstrafe = nx*look.strafe*0.6;
+    troll   = -nx*look.maxRoll*0.6;
   }, {passive:true});
-  window.addEventListener('pointerup', ()=>{ dragging=false; });
 
-  // (Opcional) Giroscopio móvil
-  if (window.DeviceOrientationEvent){
-    const startGyro=()=>window.addEventListener('deviceorientation',e=>{
-      const nx=(e.gamma||0)/45, ny=(e.beta||0)/45;
-      tyaw=-nx*look.maxYaw; tpitch=ny*look.maxPitch*0.6; troll=-nx*look.maxRoll; tstrafe=nx*look.strafe;
-    });
-    if(typeof DeviceOrientationEvent.requestPermission==='function'){
-      corridor.addEventListener('click', async()=>{ try{ const s=await DeviceOrientationEvent.requestPermission(); if(s==='granted') startGyro(); }catch{} }, {once:true});
-    } else startGyro();
+  // arrastrar para GIRAR (clic derecho) o Shift+arrastrar
+  let dragLook=false, dragMove=false, lastX=0, lastY=0;
+  corridor.addEventListener('pointerdown', e=>{
+    lastX=e.clientX; lastY=e.clientY;
+    if(e.button===2 || e.shiftKey){ dragLook=true; } else { dragMove=true; }
+    corridor.setPointerCapture?.(e.pointerId);
+  });
+  corridor.addEventListener('contextmenu', e=>e.preventDefault());
+  window.addEventListener('pointermove', e=>{
+    if(dragMove){ const dy=e.clientY-lastY; lastY=e.clientY; speedZ += dy*0.9; }
+    if(dragLook){
+      const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
+      tyaw = clamp(tyaw - dx*0.25, -look.maxYaw, look.maxYaw);
+      tpitch = clamp(tpitch + dy*0.15, -look.maxPitch, look.maxPitch);
+      tstrafe = clamp(tstrafe - dx*0.30, -look.strafe, look.strafe);
+      troll   = clamp(troll - dx*0.06, -look.maxRoll, look.maxRoll);
+    }
+  }, {passive:true});
+  window.addEventListener('pointerup', ()=>{ dragLook=false; dragMove=false; });
+
+  function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+
+  // encarar automáticamente el panel más cercano (snap a ±90°)
+  function snapFaceNearest(){
+    // si la última rotación fue a la izquierda, apuntamos a -90, si no a +90, según qué lado esté más cerca
+    // medimos distancia lateral estimada (signo del tyaw actual sirve)
+    const wantLeft = (tyaw>0);           // mirando a la izquierda
+    const target = wantLeft ? 90 : -90;  // mirar de frente el panel de ese lado
+    tyaw = clamp(target, -look.maxYaw, look.maxYaw);
+    // también centramos parallax para “pegarse” al lado elegido
+    tstrafe = clamp((target>0?1:-1) * look.strafe, -look.strafe, look.strafe);
   }
 
   function animate(){
-    // avance con inercia
+    // caminar con inercia
     cameraZ += speedZ;
-    speedZ *= FRICTION;
+    speedZ  *= FRICTION;
 
     // suavizado de mirada/parallax
-    yaw+= (tyaw-yaw)*look.ease;
-    pitch+=(tpitch-pitch)*look.ease;
-    roll+=(troll-roll)*look.ease;
-    strafe+=(tstrafe-strafe)*look.ease;
+    yaw   += (tyaw   - yaw)   * look.ease;
+    pitch += (tpitch - pitch) * look.ease;
+    roll  += (troll  - roll)  * look.ease;
+    strafe+= (tstrafe- strafe)* look.ease;
 
-    cameraEl.style.transform = `translate3d(${strafe}px,0,0) rotateX(${pitch}deg) rotateY(${yaw}deg) rotateZ(${roll}deg)`;
+    cameraEl.style.transform =
+      `translate3d(${strafe}px,0,0) rotateX(${pitch}deg) rotateY(${yaw}deg) rotateZ(${roll}deg)`;
     scene.style.transform = `translateZ(${cameraZ}px)`;
 
     // blur por velocidad
-    const fast = Math.abs(speedZ)>6;
-    scene.classList.toggle('speed-blur', fast);
+    scene.classList.toggle('speed-blur', Math.abs(speedZ)>6);
 
     // reciclar paneles para loop infinito
     for(const p of panels){
@@ -171,5 +204,4 @@
   animate();
 })();
 </script>
-</body>
-</html>
+<!-- ======= /PASILLO 3D ======= -->
