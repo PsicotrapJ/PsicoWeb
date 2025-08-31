@@ -1,6 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pasillo Psicotrap — Shorts</title>
+<style>
+  :root{ --bg1:#121a3a; --bg2:#0c122c; --bg3:#070b16; --glowC:#00f0ff; --glowF:#ff1fd8; }
+  html,body{margin:0;height:100%;background:#05070e;color:#e8ecff;font-family:system-ui,Segoe UI,Roboto,Inter,Arial}
+  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:16px}
+
+  /* PASILLO */
+  .corridor{
+    position:relative; height:90vh; width:min(1200px,95vw);
+    border-radius:18px; overflow:hidden; perspective:1200px;
+    background: radial-gradient(1600px 1000px at 50% 18%, var(--bg1) 0%, var(--bg2) 45%, var(--bg3) 80%);
+    box-shadow: 0 24px 70px rgba(0,0,0,.55), inset 0 0 200px rgba(255,31,216,.10), inset 0 0 200px rgba(0,240,255,.10);
+    user-select:none; touch-action:none;
+  }
+  .corridor::before,.corridor::after{
+    content:""; position:absolute; left:0; right:0; height:40%; pointer-events:none; mix-blend-mode:screen;
+  }
+  .corridor::before{top:-10%; background:linear-gradient(180deg, rgba(0,240,255,.10), rgba(0,0,0,0));}
+  .corridor::after{bottom:-10%; background:linear-gradient(0deg, rgba(255,31,216,.12), rgba(0,0,0,0));}
+
+  .camera{position:absolute; inset:0; transform-style:preserve-3d; will-change:transform;}
+  .scene {position:absolute; inset:0; transform-style:preserve-3d; will-change:transform;}
+
+  .panel{
+    position:absolute; transform-style:preserve-3d;
+    width:22vw; max-width:320px; aspect-ratio:9/16; border-radius:14px; overflow:hidden;
+    background:#0b0f1c;
+    box-shadow: 0 10px 30px rgba(0,0,0,.55),
+                inset 0 0 30px rgba(255,31,216,.28),
+                inset 0 0 30px rgba(0,240,255,.24);
+  }
+  .panel::before{
+    content:""; position:absolute; inset:0; border-radius:inherit; border:2px solid rgba(255,255,255,.06);
+    box-shadow: 0 0 18px rgba(0,240,255,.35), 0 0 44px rgba(255,31,216,.28), inset 0 0 30px rgba(0,0,0,.6);
+    pointer-events:none;
+  }
+  .panel iframe, .panel .img{position:absolute; inset:0; width:100%; height:100%; border:0; background:#000;}
+
+  .hud{position:absolute; bottom:10px; width:100%; text-align:center; font-size:12px; opacity:.85; pointer-events:none;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+  .speed-blur{filter:blur(1px) saturate(115%)}
+  @media(max-width:800px){ .panel{ width:36vw; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="corridor" id="corridor">
+    <div class="camera" id="camera"><div class="scene" id="scene"></div></div>
+    <div class="hud">Scroll / ↑ ↓ para avanzar — mové el mouse para mirar a los lados (drag/touch también)</div>
+  </section>
+</div>
+
 <script>
 (function(){
-  // === Tus videos ===
+  /* === TUS SHORTS === */
   const LEFT_VIDEOS  = ["bG5kLiHUqps","WYs4CVCk0VY","SzifIQH0DvM","K2qWjAxmng8","sSu4GRr4OfA"];
   const RIGHT_VIDEOS = ["5EqRXSvToAU","zEwEcDToCv0","0pymj3yG7C4","EqJeIEEUuXE","pldK8RHRsHE"];
 
@@ -8,90 +64,105 @@
   const cameraEl = document.getElementById('camera');
   const scene = document.getElementById('scene');
 
-  const spacingZ = 1400;
-  const doorX    = 520;
+  /* Geometría del pasillo */
+  const spacingZ = 1400;           // separación entre “puertas”
+  const doorX    = 520;             // distancia lateral
+  const count = Math.max(LEFT_VIDEOS.length, RIGHT_VIDEOS.length);
 
+  /* Construcción de paneles */
   const panels = [];
-
-  function makePanel(side, index, id){
+  function addPanel(side, i, id){
     const el = document.createElement('div');
     el.className = 'panel';
-    const z = -index * spacingZ;
-    const x = (side === 'L' ? -doorX : doorX);
-    const rotY = (side === 'L' ? 90 : -90);
+    const z = -i * spacingZ;
+    const x = (side==='L' ? -doorX : doorX);
+    const rotY = (side==='L' ? 90 : -90);
     el.style.transform = `translate3d(${x}px,0,${z}px) rotateY(${rotY}deg)`;
-    el.dataset.z = z;
+    el.dataset.z = z; el.dataset.side = side;
 
-    const src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}&playsinline=1&modestbranding=1&rel=0`;
     const ifr = document.createElement('iframe');
     ifr.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
-    ifr.src = src;
+    ifr.loading = "lazy";
+    ifr.src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}&playsinline=1&modestbranding=1&rel=0`;
     el.appendChild(ifr);
 
-    scene.appendChild(el);
-    panels.push(el);
+    scene.appendChild(el); panels.push(el);
   }
-
-  const count = Math.max(LEFT_VIDEOS.length, RIGHT_VIDEOS.length);
   for(let i=0;i<count;i++){
-    makePanel('L', i, LEFT_VIDEOS[i % LEFT_VIDEOS.length]);
-    makePanel('R', i, RIGHT_VIDEOS[i % RIGHT_VIDEOS.length]);
+    addPanel('L', i, LEFT_VIDEOS[i % LEFT_VIDEOS.length]);
+    addPanel('R', i, RIGHT_VIDEOS[i % RIGHT_VIDEOS.length]);
   }
 
-  // ==== Movimiento continuo ====
-  let cameraZ = 0;     // posición actual
-  let speedZ  = 0;     // velocidad
-  let yaw=0,pitch=0,roll=0,strafe=0;
-  let targetYaw=0,targetPitch=0,targetRoll=0,targetStrafe=0;
+  /* === Movimiento continuo (fluido) === */
+  let cameraZ = 0;     // posición
+  let speedZ  = 0;     // velocidad con inercia
+  const FRICTION = 0.92;
+  const IMPULSE_SCROLL = 0.20; // sensibilidad del scroll
+  const IMPULSE_KEYS   = 40;   // impulso con flechas/W/S
 
-  const look = { maxYawDeg:10, maxPitchDeg:6, maxRollDeg:3, strafe:90, ease:0.08 };
+  // Head tracking con easing
+  const look = { maxYaw:10, maxPitch:6, maxRoll:3, strafe:90, ease:0.085 };
+  let yaw=0,pitch=0,roll=0,strafe=0, tyaw=0,tpitch=0,troll=0,tstrafe=0;
 
-  // Input: scroll/flechas = impulsos de velocidad
-  function onWheel(e){ speedZ += -e.deltaY * 0.2; }
-  function onKey(e){
+  // Impulsos (scroll / teclas)
+  corridor.addEventListener('wheel', e=>{ speedZ += -e.deltaY * IMPULSE_SCROLL; }, {passive:true});
+  window.addEventListener('keydown', e=>{
     const k = e.key.toLowerCase();
-    if (k==='arrowup' || k==='w') speedZ -= 40;
-    if (k==='arrowdown' || k==='s') speedZ += 40;
-  }
-  corridor.addEventListener('wheel', onWheel,{passive:true});
-  window.addEventListener('keydown', onKey);
-
-  // Mouse: head tracking
-  window.addEventListener('mousemove', e=>{
-    const rect = corridor.getBoundingClientRect();
-    const nx = (e.clientX-rect.left)/rect.width*2-1;
-    const ny = (e.clientY-rect.top)/rect.height*2-1;
-    targetYaw   = -nx*look.maxYawDeg;
-    targetPitch =  ny*look.maxPitchDeg;
-    targetRoll  = -nx*look.maxRollDeg;
-    targetStrafe=  nx*look.strafe;
+    if(k==='arrowup'||k==='w') speedZ -= IMPULSE_KEYS;
+    if(k==='arrowdown'||k==='s') speedZ += IMPULSE_KEYS;
   });
 
-  // Animación
+  // Drag/touch para avanzar
+  let dragging=false, lastY=0;
+  corridor.addEventListener('pointerdown', e=>{ dragging=true; lastY=e.clientY; corridor.setPointerCapture?.(e.pointerId); });
+  window.addEventListener('pointermove', e=>{
+    if(dragging){ const dy=e.clientY-lastY; lastY=e.clientY; speedZ += dy*0.9; }
+    // head tracking
+    const r = corridor.getBoundingClientRect();
+    const nx = (e.clientX-r.left)/r.width*2-1, ny = (e.clientY-r.top)/r.height*2-1;
+    tyaw   = -nx*look.maxYaw;
+    tpitch =  ny*look.maxPitch;
+    troll  = -nx*look.maxRoll*0.8;
+    tstrafe=  nx*look.strafe;
+  }, {passive:true});
+  window.addEventListener('pointerup', ()=>{ dragging=false; });
+
+  // (Opcional) Giroscopio móvil
+  if (window.DeviceOrientationEvent){
+    const startGyro=()=>window.addEventListener('deviceorientation',e=>{
+      const nx=(e.gamma||0)/45, ny=(e.beta||0)/45;
+      tyaw=-nx*look.maxYaw; tpitch=ny*look.maxPitch*0.6; troll=-nx*look.maxRoll; tstrafe=nx*look.strafe;
+    });
+    if(typeof DeviceOrientationEvent.requestPermission==='function'){
+      corridor.addEventListener('click', async()=>{ try{ const s=await DeviceOrientationEvent.requestPermission(); if(s==='granted') startGyro(); }catch{} }, {once:true});
+    } else startGyro();
+  }
+
   function animate(){
-    // avanzar con inercia
+    // avance con inercia
     cameraZ += speedZ;
-    speedZ *= 0.92; // fricción
+    speedZ *= FRICTION;
 
-    // easing de cámara (rotación/parallax)
-    yaw     += (targetYaw   - yaw)   * look.ease;
-    pitch   += (targetPitch - pitch) * look.ease;
-    roll    += (targetRoll  - roll)  * look.ease;
-    strafe  += (targetStrafe- strafe)* look.ease;
+    // suavizado de mirada/parallax
+    yaw+= (tyaw-yaw)*look.ease;
+    pitch+=(tpitch-pitch)*look.ease;
+    roll+=(troll-roll)*look.ease;
+    strafe+=(tstrafe-strafe)*look.ease;
 
-    cameraEl.style.transform =
-      `translate3d(${strafe}px,0,0) rotateX(${pitch}deg) rotateY(${yaw}deg) rotateZ(${roll}deg)`;
+    cameraEl.style.transform = `translate3d(${strafe}px,0,0) rotateX(${pitch}deg) rotateY(${yaw}deg) rotateZ(${roll}deg)`;
     scene.style.transform = `translateZ(${cameraZ}px)`;
 
-    // reciclar paneles
+    // blur por velocidad
+    const fast = Math.abs(speedZ)>6;
+    scene.classList.toggle('speed-blur', fast);
+
+    // reciclar paneles para loop infinito
     for(const p of panels){
       let z = parseFloat(p.dataset.z);
-      if (z + cameraZ > 800){
+      if(z + cameraZ > 800){
         z -= spacingZ * count;
         p.dataset.z = z;
-        const side = panels.indexOf(p)%2===0 ? 'L':'R';
-        const rotY = (side==='L'?90:-90);
-        const x = (side==='L'?-doorX:doorX);
+        const side=p.dataset.side, rotY=(side==='L'?90:-90), x=(side==='L'?-doorX:doorX);
         p.style.transform = `translate3d(${x}px,0,${z}px) rotateY(${rotY}deg)`;
       }
     }
@@ -100,3 +171,5 @@
   animate();
 })();
 </script>
+</body>
+</html>
