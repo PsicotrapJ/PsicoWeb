@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Psicotrap J Universe — Big Bang + Warp + Spotlight</title>
+<style>
+  :root{
+    --fg:#eef2ff;
+    --cyan:#00f0ff;
+    --fucsia:#ff1fd8;
+    --deep:#060912;
+  }
+  html,body{margin:0;height:100%;background:#070b16;color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Inter,Arial}
+  .wrap{min-height:100%;display:flex;flex-direction:column;align-items:center}
+  header{padding:22px 14px 8px;text-align:center}
+  h1{margin:0 0 4px;font-size:26px}
+  p{margin:0 0 12px;opacity:.85}
+
+  .stage{
+    position:relative; width:min(1100px,92vw); height:560px;
+    border-radius:18px; overflow:hidden; margin:16px auto 38px;
+    background: radial-gradient(1200px 800px at 20% 0% , #0f1950 0%, #0d1342 35%, #0a0f1f 70%, #060912 100%);
+    box-shadow: 0 28px 90px rgba(0,0,0,.65),
+                inset 0 0 160px rgba(0,240,255,.12),
+                inset 0 0 160px rgba(255,31,216,.08);
+  }
+  canvas{position:absolute; inset:0}
+  .halo{
+    position:absolute; width:260px; height:260px; margin:-130px 0 0 -130px;
+    border-radius:50%;
+    background: radial-gradient(circle,
+      rgba(0,240,255,.28) 0%,
+      rgba(255,31,216,.18) 36%,
+      rgba(0,0,0,0) 72%);
+    mix-blend-mode:screen; pointer-events:none; z-index:3;
+    transform:translate3d(-1000px,-1000px,0);
+    filter: blur(1px);
+  }
+
+  /* --- Cartel de neón roto + raíces --- */
+  .neon{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    z-index:4; opacity:0; pointer-events:none;
+    transition: opacity .6s ease;
+  }
+  .neon.show{ opacity:1; }
+  .sign-wrap{
+    position:relative;
+    padding:48px 64px;
+    border-radius:16px;
+    transform: rotate(-1.2deg) translateZ(0);
+    /* chapa oxidada/postapocalíptica */
+    background:
+      radial-gradient(200px 140px at 20% 30%, rgba(255,31,216,.14), transparent 60%),
+      radial-gradient(240px 180px at 80% 60%, rgba(0,240,255,.12), transparent 60%),
+      repeating-linear-gradient(135deg, #1b1f2b 0 10px, #151925 10px 20px),
+      linear-gradient(#0b0f1c,#0b0f1c);
+    box-shadow:
+      inset 0 0 30px rgba(0,0,0,.65),
+      0 20px 60px rgba(0,0,0,.6);
+    outline: 2px dashed rgba(255,255,255,.06);
+    outline-offset: -8px;
+  }
+  /* grietas/rajaduras */
+  .sign-wrap::before{
+    content:"";
+    position:absolute; inset:-2px;
+    background:
+      radial-gradient(2px 80% at 10% 50%, rgba(0,0,0,.6), transparent 60%),
+      radial-gradient(1px 60% at 70% 40%, rgba(0,0,0,.7), transparent 60%),
+      radial-gradient(3px 70% at 40% 60%, rgba(0,0,0,.55), transparent 60%);
+    pointer-events:none;
+    mix-blend-mode:multiply;
+  }
+  /* raíces trepando */
+  .roots, .roots::before, .roots::after{
+    position:absolute; content:""; pointer-events:none;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,.8));
+  }
+  .roots{
+    left:-40px; bottom:-20px; width:180px; height:220px;
+    background:
+      repeating-linear-gradient(100deg, #1a2a1a 0 5px, #0f1b12 5px 10px);
+    clip-path: polygon(0% 100%, 12% 88%, 16% 72%, 22% 68%, 26% 58%, 28% 48%, 35% 44%, 38% 34%, 46% 28%, 56% 14%, 60% 0%, 0% 0%);
+    opacity:.85;
+  }
+  .roots::before{
+    left:84%; bottom:12%; width:120px; height:180px;
+    background: repeating-linear-gradient(95deg, #1a2a1a 0 5px, #0f1b12 5px 10px);
+    clip-path: polygon(0% 100%, 12% 88%, 20% 76%, 26% 70%, 32% 60%, 36% 52%, 46% 40%, 58% 26%, 64% 10%, 70% 0%, 0% 0%);
+  }
+  .roots::after{
+    left:38%; top:-22%; width:160px; height:140px;
+    background: repeating-linear-gradient(100deg, #182818 0 6px, #0e1a10 6px 12px);
+    clip-path: polygon(0% 0%, 12% 22%, 20% 34%, 28% 44%, 36% 46%, 44% 52%, 60% 70%, 70% 86%, 78% 100%, 0% 100%);
+    transform: rotate(12deg);
+    opacity:.9;
+  }
+
+  .neon-text{
+    font-size: clamp(40px, 6.5vw, 92px);
+    letter-spacing:.08em;
+    color:#fff; text-transform:uppercase; text-align:center; line-height:1.04;
+    text-shadow:
+      0 0 8px rgba(255,255,255,.9),
+      0 0 18px rgba(0,240,255,.9),
+      0 0 36px rgba(255,31,216,.75),
+      0 0 72px rgba(255,31,216,.6),
+      0 0 120px rgba(0,240,255,.6);
+    animation: neonFlicker 3.2s infinite steps(120);
+  }
+  @keyframes neonFlicker{
+    0%, 7%, 9%, 13%, 15%, 100% { opacity:1; filter: none; }
+    8%, 14% { opacity:.72; filter: contrast(120%) brightness(1.2); }
+    62% { opacity:.92; }
+    63% { opacity:.5; }
+    64% { opacity:1; }
+  }
+
+  /* --- Spotlight post-explosión --- */
+  .spot-overlay{
+    position:absolute; inset:0; z-index:5; pointer-events:none;
+    background: radial-gradient(220px circle at var(--mx,50%) var(--my,50%),
+      rgba(255,31,216,.85) 0%,
+      rgba(0,240,255,.55) 30%,
+      rgba(0,0,0,.0) 38%),
+      radial-gradient(460px circle at var(--mx,50%) var(--my,50%),
+      rgba(255,31,216,.18) 0%,
+      rgba(0,240,255,.14) 35%,
+      rgba(0,0,0,0) 60%);
+    mix-blend-mode: screen; /* coloriza luz */
+    opacity:0; transition: opacity .5s ease;
+  }
+  .spot-overlay.dark{
+    opacity:1;
+    /* oscurecimiento global debajo del halo */
+    background:
+      radial-gradient(220px circle at var(--mx,50%) var(--my,50%),
+        rgba(255,31,216,.85) 0%,
+        rgba(0,240,255,.55) 30%,
+        rgba(0,0,0,0) 38%),
+      radial-gradient(460px circle at var(--mx,50%) var(--my,50%),
+        rgba(255,31,216,.18) 0%,
+        rgba(0,240,255,.14) 35%,
+        rgba(0,0,0,0) 60%),
+      radial-gradient(1600px 1200px at 50% 50%, rgba(0,0,0,.78), rgba(0,0,0,.92));
+  }
+
+  .hint{
+    position:absolute; bottom:12px; width:100%; text-align:center; z-index:6;
+    font-size:12px; opacity:.75; user-select:none; pointer-events:none;
+  }
+
+  footer{padding:8px 16px 26px;text-align:center;font-size:12px;opacity:.7}
+  @media (prefers-reduced-motion:reduce){ .halo{display:none} .neon-text{animation:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Psicotrap J — Big Bang · Warp · Spotlight</h1>
+    <p>Arrastrá el enjambre hasta compactarlo. Tras el viaje, el cartel neón aparece y activás la linterna fucsya/cyan.</p>
+  </header>
+
+  <section class="stage" id="stage">
+    <canvas id="bg" class="bg"></canvas>
+    <canvas id="fx" class="fx"></canvas>
+    <div id="halo" class="halo"></div>
+
+    <div id="neon" class="neon">
+      <div class="sign-wrap">
+        <div class="roots"></div>
+        <div class="neon-text">Psicotrap J<br/>Universe</div>
+      </div>
+    </div>
+
+    <!-- overlay de spotlight (se activa en modo linterna) -->
+    <div id="spot" class="spot-overlay"></div>
+
+    <div class="hint" id="hint">Tip: compactá las notas cerca del cursor. En el neón, mové la linterna. Click reinicia.</div>
+  </section>
+
+  <footer>Canvas 2D · intensificado en fucsya/cyan · spotlight post-apocalíptico</footer>
+</div>
+
+<script>
+(function(){
+  const host = document.getElementById('stage');
+  const bg = document.getElementById('bg');
+  const fx = document.getElementById('fx');
+  const neon = document.getElementById('neon');
+  const halo = document.getElementById('halo');
+  const hint = document.getElementById('hint');
+  const spot = document.getElementById('spot');
+  const bctx = bg.getContext('2d');
+  const ctx  = fx.getContext('2d', { alpha:true });
+
+  let W,H,dpr;
+  function resize(){
+    dpr = Math.min(devicePixelRatio||1, 2);
+    W = host.clientWidth; H = host.clientHeight;
+    for(const c of [bg,fx]){
+      c.width = Math.floor(W*dpr); c.height = Math.floor(H*dpr);
+      c.style.width = W+'px'; c.style.height = H+'px';
+    }
+    bctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    buildStars(true);
+  }
+  addEventListener('resize', resize);
+
+  /* ---------- Fondo base ---------- */
+  let stars=[];
+  function buildStars(regen){
+    if(regen){
+      const count = Math.round((W*H)/7500);
+      stars = Array.from({length:count}, _=>({
+        x: Math.random()*W,
+        y: Math.random()*H,
+        r: Math.random()*1.9+0.3,
+        a: 0.5+Math.random()*0.6,
+        hue: Math.random()<.5 ? 185 : 305
+      }));
+    }
+    bctx.clearRect(0,0,W,H);
+    const g = bctx.createRadialGradient(W*.2,H*.1,60, W*.55,H*.65, Math.max(W,H));
+    g.addColorStop(0, 'rgba(0,240,255,0.16)');
+    g.addColorStop(.35, 'rgba(255,31,216,0.14)');
+    g.addColorStop(.7, 'rgba(30,40,90,0.08)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    bctx.fillStyle=g; bctx.fillRect(0,0,W,H);
+
+    for(const s of stars){
+      bctx.globalAlpha=s.a;
+      bctx.fillStyle=`hsl(${s.hue} 100% 85%)`;
+      bctx.beginPath(); bctx.arc(s.x,s.y,s.r,0,Math.PI*2); bctx.fill();
+    }
+    bctx.globalAlpha=1;
+  }
+
+  /* ---------- Notas + estelas ---------- */
+  const NOTES = ['♪','♫'];
+  const N = 120;
+  const notes=[]; const trails=[];
+  const TRAIL_LEN = 14;
+  function initNotes(){
+    notes.length=0; trails.length=0;
+    for(let i=0;i<N;i++){
+      const x=Math.random()*W, y=Math.random()*H;
+      notes.push({
+        x,y, vx:(Math.random()-.5)*.6, vy:(Math.random()-.5)*.6,
+        size: 18+Math.random()*10, target:null,
+        char: NOTES[Math.random()*NOTES.length|0],
+        rot: Math.random()*Math.PI*2, spin:(Math.random()-.5)*.012,
+        hue: Math.random()<.5? 185 : 305
+      });
+      trails.push(Array.from({length:TRAIL_LEN}, _=>({x,y,alpha:0})));
+    }
+  }
+
+  const mouse = { x:W/2, y:H/2, active:false };
+  function colorMix(t){
+    const c1 = {r:0, g:240, b:255};
+    const c2 = {r:255, g:31, b:216};
+    const r = Math.round(c1.r*(1-t)+c2.r*t);
+    const g = Math.round(c1.g*(1-t)+c2.g*t);
+    const b = Math.round(c1.b*(1-t)+c2.b*t);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  /* ---------- Estados ---------- */
+  let mode='normal';      // 'normal' | 'tension' | 'bigbang' | 'warp' | 'neon' | 'spot'
+  let big={t:0, x:0, y:0, burst:[]};
+  let warp={t:0, x:0, y:0, streaks:[]};
+
+  function triggerTension(){ mode='tension'; tension.t=0; }
+  const tension={ t:0 };
+
+  function triggerBigBang(x,y){
+    mode='bigbang';
+    big.t=0; big.x=x; big.y=y; big.burst.length=0;
+    const M=360;
+    for(let i=0;i<M;i++){
+      const a=Math.random()*Math.PI*2;
+      const sp= 2 + Math.random()*7.5;
+      const hue = Math.random()<.5? 185 : 305;
+      big.burst.push({
+        x,y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp,
+        life: 1, size: 1+Math.random()*3, hue
+      });
+    }
+  }
+
+  function intoWarp(x,y){
+    mode='warp';
+    warp.t=0; warp.x=x; warp.y=y; warp.streaks.length=0;
+    const S = 800;
+    for(let i=0;i<S;i++){
+      const a = Math.random()*Math.PI*2;
+      const d = 60 + Math.random()*Math.max(W,H);
+      const px = x + Math.cos(a)*d;
+      const py = y + Math.sin(a)*d;
+      const sp = 8 + Math.random()*24;
+      warp.streaks.push({
+        x:px, y:py, px:px, py:py,
+        speed: sp,
+        angle: a,
+        hue: Math.random()<.5? 185 : 305,
+        alpha: .25 + Math.random()*.85,
+        w: 1 + Math.random()*2.2
+      });
+    }
+    ctx.globalCompositeOperation = 'lighter';
+  }
+
+  function leaveWarpToNeon(){
+    mode='neon';
+    ctx.globalCompositeOperation = 'source-over';
+    neon.classList.add('show');
+    hint.textContent = 'Modo linterna activo. Mueve el cursor. Click/Tap reinicia.';
+    // paso a spotlight tras un “golpe negro”
+    setTimeout(()=> {
+      mode='spot';
+      spot.classList.add('dark');
+    }, 700);
+  }
+
+  function resetAll(){
+    neon.classList.remove('show');
+    spot.classList.remove('dark');
+    hint.textContent = 'Tip: compactá las notas cerca del cursor. En el neón, mové la linterna. Click reinicia.';
+    buildStars(true); initNotes(); mode='normal';
+  }
+
+  function drawTrail(path, hue){
+    ctx.lineWidth = 2.2;
+    for(let i=1;i<path.length;i++){
+      const a = i/path.length;
+      const t = (hue===185)? (1-a) : a;
+      ctx.strokeStyle = colorMix(t);
+      ctx.globalAlpha = path[i].alpha*0.95;
+      ctx.beginPath();
+      ctx.moveTo(path[i-1].x, path[i-1].y);
+      ctx.lineTo(path[i].x, path[i].y);
+      ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  function step(){
+    ctx.clearRect(0,0,W,H);
+
+    if(mode==='normal' || mode==='tension'){
+      // física de notas
+      for(let idx=0; idx<N; idx++){
+        const p = notes[idx];
+        if(mouse.active){
+          const dx=mouse.x-p.x, dy=mouse.y-p.y, d=Math.hypot(dx,dy)+1e-4;
+          const r1=90, r2=240;
+          if(d<r2){
+            let f = d<r1 ? .28 : .085;
+            if(mode==='tension') f *= 1.25; // más fuerza en tensión
+            p.vx += (dx/d)*f; p.vy += (dy/d)*f;
+            if(d<r1*.85) p.target = Math.min(32,(p.size||18)+6);
+            else p.target=null;
+          }
+        }
+        // “temblor” en tensión
+        if(mode==='tension'){
+          p.vx += (Math.random()-.5)*0.18;
+          p.vy += (Math.random()-.5)*0.18;
+        }
+
+        p.vx*=.965; p.vy*=.965; p.x+=p.vx; p.y+=p.vy; p.rot+=p.spin;
+        if(p.x<-20) p.x=W+20; if(p.x>W+20) p.x=-20;
+        if(p.y<-20) p.y=H+20; if(p.y>H+20) p.y=-20;
+
+        const trail = trails[idx];
+        trail.pop();
+        trail.unshift({x:p.x, y:p.y, alpha:.92});
+        for(let i=1;i<trail.length;i++) trail[i].alpha*=0.9;
+        drawTrail(trail, p.hue);
+
+        // visual de nota
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+        const s = p.target ? (p.size*.85 + .15*p.target) : p.size;
+        p.size = s;
+        // en tensión, la nota “absorbe” luz (borde brillante)
+        if(mode==='tension'){
+          ctx.font = `800 ${s}px "Segoe UI Symbol", "Noto Color Emoji", Arial`;
+          ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.9)';
+          ctx.strokeText(p.char, 0,0);
+          ctx.fillStyle = 'rgba(10,12,18,1)';
+          ctx.fillText(p.char, 0,0);
+        } else {
+          ctx.font = `800 ${s}px "Segoe UI Symbol", "Noto Color Emoji", Arial`;
+          ctx.fillStyle = 'rgba(255,255,255,.98)';
+          ctx.fillText(p.char, 0,0);
+        }
+        ctx.restore();
+      }
+
+      // cluster & disparo de etapas
+      let cx=0, cy=0;
+      for(const p of notes){ cx+=p.x; cy+=p.y; } cx/=N; cy/=N;
+      let maxR=0;
+      for(const p of notes){ const d=Math.hypot(p.x-cx,p.y-cy); if(d>maxR) maxR=d; }
+      if(mouse.active){
+        const nearMouse = Math.hypot(cx-mouse.x, cy-mouse.y) < 40;
+        if(mode==='normal' && maxR < 70 && nearMouse){ triggerTension(); }
+        if(mode==='tension'){
+          tension.t += 0.02;
+          // “apagón blanco” micro antes de explotar
+          if(maxR < 28 && nearMouse){
+            // flash blanco breve
+            ctx.fillStyle='rgba(255,255,255,.95)';
+            ctx.fillRect(0,0,W,H);
+            triggerBigBang(cx, cy);
+          }
+        }
+      }
+    }
+    else if(mode==='bigbang'){
+      big.t += 0.02;
+
+      // flash y shockwave
+      const flash = Math.max(0, 1 - big.t*1.1);
+      if(flash>0){
+        const grd = ctx.createRadialGradient(big.x,big.y, 0, big.x,big.y, 240);
+        grd.addColorStop(0, `rgba(255,255,255,${0.7*flash})`);
+        grd.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+      }
+      for(const q of big.burst){
+        q.x += q.vx; q.y += q.vy;
+        q.vx *= .983; q.vy *= .983;
+        q.life *= .985;
+        ctx.globalAlpha = q.life;
+        ctx.fillStyle = (q.hue===185)? 'rgb(0,240,255)' : 'rgb(255,31,216)';
+        ctx.beginPath(); ctx.arc(q.x,q.y,q.size,0,Math.PI*2); ctx.fill();
+      }
+      ctx.globalAlpha=1;
+
+      const R = 40 + big.t*520;
+      ctx.strokeStyle = colorMix((Math.sin(big.t*3.2)+1)/2);
+      ctx.lineWidth = Math.max(1, 8 - big.t*5.6);
+      ctx.globalAlpha = Math.max(0, 0.6 - big.t*0.52);
+      ctx.beginPath(); ctx.arc(big.x,big.y,R,0,Math.PI*2); ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      if(big.t>0.9){ intoWarp(big.x,big.y); }
+    }
+    else if(mode==='warp'){
+      warp.t += 0.022;
+
+      // streaks con swirl (remolino sutil)
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      for(const s of warp.streaks){
+        s.px = s.x; s.py = s.y;
+        // vector radial + swirl
+        const dx = s.x - warp.x, dy = s.y - warp.y;
+        const dist = Math.hypot(dx,dy)+1e-4;
+        let ux = dx/dist, uy = dy/dist;
+
+        const swirl = 0.22; // más grande = más remolino
+        const rx = -uy*swirl, ry = ux*swirl; // rotación 90°
+        ux = (ux*0.9 + rx*0.1);
+        uy = (uy*0.9 + ry*0.1);
+
+        const accel = 1.0 + warp.t*4.0;
+        s.x += ux * s.speed * accel;
+        s.y += uy * s.speed * accel;
+
+        // reciclar
+        if(s.x < -120 || s.x > W+120 || s.y < -120 || s.y > H+120){
+          const a = Math.random()*Math.PI*2;
+          const d = 30 + Math.random()*80;
+          s.x = warp.x + Math.cos(a)*d;
+          s.y = warp.y + Math.sin(a)*d;
+          s.px = s.x; s.py = s.y;
+          s.speed = 8 + Math.random()*24;
+          s.hue = Math.random()<.5? 185 : 305;
+          s.alpha = .25 + Math.random()*.85;
+          s.w = 1 + Math.random()*2.2;
+        }
+
+        ctx.strokeStyle = `hsla(${s.hue},100%,72%,${Math.min(1, s.alpha)})`;
+        ctx.lineWidth = s.w;
+        ctx.beginPath(); ctx.moveTo(s.px, s.py); ctx.lineTo(s.x, s.y); ctx.stroke();
+      }
+      ctx.restore();
+
+      // vignette negra (túnel)
+      const grd = ctx.createRadialGradient(warp.x,warp.y, 0, warp.x,warp.y, Math.max(W,H));
+      grd.addColorStop(0, 'rgba(0,0,0,0)');
+      grd.addColorStop(Math.min(.38+.28*warp.t, .92), 'rgba(0,0,0,0.38)');
+      grd.addColorStop(1, 'rgba(0,0,0,0.96)');
+      ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+
+      // falso final: blackout breve
+      if(warp.t>1.45 && warp.t<1.55){
+        ctx.fillStyle='rgba(0,0,0,0.85)';
+        ctx.fillRect(0,0,W,H);
+      }
+      if(warp.t>1.65){ leaveWarpToNeon(); }
+    }
+    else if(mode==='neon'){
+      // nada; en 700ms pasa a spotlight
+    }
+    else if(mode==='spot'){
+      // spotlight se maneja via CSS con variables mx/my
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  /* ---------- Input + Spotlight ---------- */
+  function setMouse(e){
+    const rect = fx.getBoundingClientRect();
+    const x = (e.offsetX!==undefined && e.target===fx) ? e.offsetX : (e.clientX - rect.left);
+    const y = (e.offsetY!==undefined && e.target===fx) ? e.offsetY : (e.clientY - rect.top);
+    mouse.x=x; mouse.y=y;
+    halo.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    // spotlight coords
+    spot.style.setProperty('--mx', (x/W*100)+'%');
+    spot.style.setProperty('--my', (y/H*100)+'%');
+  }
+  fx.addEventListener('pointerenter', e=>{ if(mode!=='spot'){ mouse.active=true; } setMouse(e); });
+  fx.addEventListener('pointermove',  e=>{ setMouse(e); }, {passive:true});
+  fx.addEventListener('pointerleave', e=>{ mouse.active=false; halo.style.transform='translate3d(-1000px,-1000px,0)'; });
+
+  // spotlight también sobre el cartel (para que ilumine la chapa/raíces)
+  host.addEventListener('pointermove', e=>{
+    if(mode==='spot'){
+      const rect = host.getBoundingClientRect();
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
+      spot.style.setProperty('--mx', (x/W*100)+'%');
+      spot.style.setProperty('--my', (y/H*100)+'%');
+    }
+  });
+
+  // click reinicia en modo neón/spot
+  host.addEventListener('click', ()=>{
+    if(mode==='neon' || mode==='spot'){ resetAll(); }
+  });
+
+  /* ---------- Go ---------- */
+  resize(); buildStars(true); initNotes(); requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>
