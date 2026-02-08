@@ -24,34 +24,10 @@
             background: var(--void);
             color: #ffffff;
             overflow: hidden;
-            cursor: none;
+            cursor: default;
         }
 
-        /* CUSTOM CURSOR */
-        .cursor {
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--cyan);
-            border-radius: 50%;
-            position: fixed;
-            pointer-events: none;
-            z-index: 10000;
-            mix-blend-mode: difference;
-            transition: transform 0.15s ease;
-        }
-
-        .cursor-trail {
-            width: 8px;
-            height: 8px;
-            background: var(--magenta);
-            border-radius: 50%;
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-            opacity: 0.6;
-        }
-
-        /* CANVAS BACKGROUND */
+        /* CANVAS LAYERS */
         #particleCanvas {
             position: fixed;
             top: 0;
@@ -59,6 +35,16 @@
             width: 100%;
             height: 100%;
             z-index: 0;
+        }
+
+        #refractionCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
         }
 
         /* GLITCH OVERLAY */
@@ -76,7 +62,7 @@
                 transparent 2px
             );
             pointer-events: none;
-            z-index: 1;
+            z-index: 2;
             animation: scanlines 8s linear infinite;
         }
 
@@ -220,7 +206,7 @@
             color: rgba(255, 255, 255, 0.7);
             text-align: center;
             font-style: italic;
-            margin-bottom: 40px;
+            margin-bottom: 60px;
             opacity: 0;
             animation: fadeInUp 1.5s ease-out 1.1s forwards;
         }
@@ -240,10 +226,36 @@
         .waveform-container {
             width: 600px;
             height: 80px;
-            margin-bottom: 50px;
+            margin-bottom: 40px;
             position: relative;
             opacity: 0;
             animation: fadeInUp 1.5s ease-out 1.4s forwards;
+        }
+
+        /* SPOTIFY PLAYER */
+        .spotify-container {
+            width: 600px;
+            max-width: 90%;
+            margin-bottom: 50px;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease-out 1.6s forwards;
+            position: relative;
+        }
+
+        .spotify-container::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta), var(--yellow));
+            border-radius: 14px;
+            z-index: -1;
+            opacity: 0.5;
+            filter: blur(8px);
+        }
+
+        .spotify-container iframe {
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 255, 242, 0.3);
         }
 
         .waveform {
@@ -284,20 +296,6 @@
             50% { transform: scaleY(1); opacity: 1; }
         }
 
-        /* PHILOSOPHICAL TEXT */
-        .philosophy {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 16px;
-            color: var(--cyan);
-            text-align: center;
-            max-width: 700px;
-            line-height: 1.8;
-            margin-bottom: 50px;
-            opacity: 0;
-            animation: fadeInUp 1.5s ease-out 1.7s forwards;
-            text-shadow: 0 0 10px rgba(0, 255, 242, 0.5);
-        }
-
         /* COMING SOON */
         .coming-soon {
             font-family: 'Orbitron', sans-serif;
@@ -309,7 +307,7 @@
             letter-spacing: 4px;
             text-transform: uppercase;
             opacity: 0;
-            animation: fadeInUp 1.5s ease-out 2s forwards, pulseGlow 2s ease-in-out 2.5s infinite;
+            animation: fadeInUp 1.5s ease-out 1.7s forwards, pulseGlow 2s ease-in-out 2.2s infinite;
             text-shadow: 0 0 20px var(--yellow);
         }
 
@@ -324,7 +322,7 @@
             gap: 20px;
             margin-bottom: 40px;
             opacity: 0;
-            animation: fadeInUp 1.5s ease-out 2.3s forwards;
+            animation: fadeInUp 1.5s ease-out 2s forwards;
         }
 
         .cta-btn {
@@ -383,7 +381,7 @@
             display: flex;
             gap: 30px;
             opacity: 0;
-            animation: fadeInUp 1.5s ease-out 2.6s forwards;
+            animation: fadeInUp 1.5s ease-out 2.3s forwards;
         }
 
         .social-link {
@@ -479,10 +477,9 @@
             .waveform-container {
                 width: 90%;
             }
-            
-            .philosophy {
-                font-size: 14px;
-                padding: 0 20px;
+
+            .spotify-container {
+                width: 95%;
             }
             
             .coming-soon {
@@ -553,11 +550,11 @@
         <div class="loading-text">INICIALIZANDO EXPERIMENTO...</div>
     </div>
 
-    <!-- CUSTOM CURSOR -->
-    <div class="cursor"></div>
-
-    <!-- PARTICLE CANVAS -->
+    <!-- PARTICLE CANVAS (HUMO) -->
     <canvas id="particleCanvas"></canvas>
+
+    <!-- REFRACTION CANVAS (EFECTOS PSICODÉLICOS) -->
+    <canvas id="refractionCanvas"></canvas>
 
     <!-- GLITCH OVERLAY -->
     <div class="glitch-overlay"></div>
@@ -636,12 +633,19 @@
             </div>
         </div>
 
-        <div class="philosophy">
-            En la intersección del sonido y la realidad alterada, 
-            donde el trap se encuentra con lo psicodélico,
-            donde la filosofía baila con el beat.
-            <br><br>
-            <strong style="color: var(--yellow);">El universo transmedia está por comenzar.</strong>
+        <!-- SPOTIFY PLAYER -->
+        <div class="spotify-container">
+            <iframe 
+                data-testid="embed-iframe" 
+                style="border-radius:12px" 
+                src="https://open.spotify.com/embed/artist/1WBvPa8B3lv2mzTYwkqRN8?utm_source=generator" 
+                width="100%" 
+                height="352" 
+                frameBorder="0" 
+                allowfullscreen="" 
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                loading="lazy">
+            </iframe>
         </div>
 
         <div class="coming-soon">PRÓXIMAMENTE</div>
@@ -658,60 +662,14 @@
         <div class="social-links">
             <a href="https://www.youtube.com/@PsicotrapJ" target="_blank" class="social-link">YouTube</a>
             <a href="https://www.instagram.com/psicotrapj" target="_blank" class="social-link">Instagram</a>
-            <a href="https://www.tiktok.com/@psicotrapj" target="_blank" class="social-link">TikTok</a>
-            <a href="https://open.spotify.com/artist/psicotrapj" target="_blank" class="social-link">Spotify</a>
+            <a href="https://www.tiktok.com/@psicotrap_j" target="_blank" class="social-link">TikTok</a>
+            <a href="https://open.spotify.com/intl-es/artist/1WBvPa8B3lv2mzTYwkqRN8?si=FFykLXAHSsuWlsOUoWxqwQ" target="_blank" class="social-link">Spotify</a>
         </div>
     </div>
 
     <script>
         // ============================================
-        // CUSTOM CURSOR
-        // ============================================
-        const cursor = document.querySelector('.cursor');
-        const trails = [];
-        const trailLength = 8;
-
-        // Create cursor trails
-        for (let i = 0; i < trailLength; i++) {
-            const trail = document.createElement('div');
-            trail.className = 'cursor-trail';
-            document.body.appendChild(trail);
-            trails.push(trail);
-        }
-
-        let mouseX = 0, mouseY = 0;
-        let cursorX = 0, cursorY = 0;
-
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-
-        function animateCursor() {
-            cursorX += (mouseX - cursorX) * 0.15;
-            cursorY += (mouseY - cursorY) * 0.15;
-
-            cursor.style.left = cursorX + 'px';
-            cursor.style.top = cursorY + 'px';
-
-            // Update trails
-            trails.forEach((trail, index) => {
-                const nextTrail = trails[index + 1] || cursor;
-                const x = parseFloat(nextTrail.style.left || cursorX);
-                const y = parseFloat(nextTrail.style.top || cursorY);
-                
-                trail.style.left = x + 'px';
-                trail.style.top = y + 'px';
-                trail.style.opacity = (1 - index / trailLength) * 0.6;
-            });
-
-            requestAnimationFrame(animateCursor);
-        }
-
-        animateCursor();
-
-        // ============================================
-        // PARTICLE SYSTEM
+        // SMOKE/PARTICLE SYSTEM
         // ============================================
         const canvas = document.getElementById('particleCanvas');
         const ctx = canvas.getContext('2d');
@@ -719,95 +677,180 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        const particles = [];
-        const particleCount = 150;
+        const smokeParticles = [];
+        const particleCount = 80;
         const colors = ['#00fff2', '#ff00ff', '#ffed00'];
-        const connectionDistance = 150;
 
-        class Particle {
+        let mouseX = canvas.width / 2;
+        let mouseY = canvas.height / 2;
+
+        class SmokeParticle {
             constructor() {
+                this.reset();
+            }
+
+            reset() {
                 this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.radius = Math.random() * 2 + 1;
-                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.y = canvas.height + 50;
+                this.vx = (Math.random() - 0.5) * 0.3;
+                this.vy = -Math.random() * 0.8 - 0.5;
+                this.radius = Math.random() * 40 + 20;
+                this.opacity = Math.random() * 0.3 + 0.1;
+                this.colorIndex = Math.floor(Math.random() * colors.length);
+                this.color = colors[this.colorIndex];
+                this.life = 1;
             }
 
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
+                this.life -= 0.003;
 
-                // Bounce off edges
-                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-
-                // Mouse interaction
+                // Mouse interaction - empuje suave
                 const dx = mouseX - this.x;
                 const dy = mouseY - this.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                if (distance < 100) {
+                if (distance < 150) {
                     const angle = Math.atan2(dy, dx);
-                    const force = (100 - distance) / 100;
-                    this.vx -= Math.cos(angle) * force * 0.2;
-                    this.vy -= Math.sin(angle) * force * 0.2;
+                    const force = (150 - distance) / 150;
+                    this.vx -= Math.cos(angle) * force * 0.5;
+                    this.vy -= Math.sin(angle) * force * 0.5;
+                    
+                    // Cambio de color al interactuar
+                    this.colorIndex = (this.colorIndex + 1) % colors.length;
+                    this.color = colors[this.colorIndex];
+                }
+
+                // Límites de velocidad
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+
+                // Reset si sale de pantalla o muere
+                if (this.y < -100 || this.life <= 0 || this.x < -100 || this.x > canvas.width + 100) {
+                    this.reset();
                 }
             }
 
             draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity * this.life;
+                
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+                gradient.addColorStop(0, this.color);
+                gradient.addColorStop(1, 'transparent');
+                
+                ctx.fillStyle = gradient;
+                ctx.filter = 'blur(15px)';
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.color;
                 ctx.fill();
+                
+                ctx.restore();
             }
         }
 
-        // Initialize particles
+        // Initialize smoke particles
         for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle());
+            smokeParticles.push(new SmokeParticle());
         }
 
-        function connectParticles() {
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
+        // ============================================
+        // REFRACTION EFFECT (PSICODÉLICO)
+        // ============================================
+        const refractionCanvas = document.getElementById('refractionCanvas');
+        const refractionCtx = refractionCanvas.getContext('2d');
 
-                    if (distance < connectionDistance) {
-                        ctx.beginPath();
-                        ctx.strokeStyle = `rgba(0, 255, 242, ${1 - distance / connectionDistance})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
-                    }
+        refractionCanvas.width = window.innerWidth;
+        refractionCanvas.height = window.innerHeight;
+
+        const waves = [];
+        const waveCount = 5;
+
+        class RefractionWave {
+            constructor() {
+                this.x = Math.random() * refractionCanvas.width;
+                this.y = Math.random() * refractionCanvas.height;
+                this.radius = 0;
+                this.maxRadius = Math.random() * 200 + 100;
+                this.speed = Math.random() * 0.5 + 0.3;
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.opacity = Math.random() * 0.15 + 0.05;
+            }
+
+            update() {
+                this.radius += this.speed;
+                
+                if (this.radius > this.maxRadius) {
+                    this.x = Math.random() * refractionCanvas.width;
+                    this.y = Math.random() * refractionCanvas.height;
+                    this.radius = 0;
+                    this.maxRadius = Math.random() * 200 + 100;
+                    this.color = colors[Math.floor(Math.random() * colors.length)];
                 }
             }
+
+            draw() {
+                refractionCtx.save();
+                refractionCtx.globalAlpha = this.opacity * (1 - this.radius / this.maxRadius);
+                refractionCtx.strokeStyle = this.color;
+                refractionCtx.lineWidth = 2;
+                refractionCtx.filter = 'blur(3px)';
+                refractionCtx.beginPath();
+                refractionCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                refractionCtx.stroke();
+                refractionCtx.restore();
+            }
         }
 
+        // Initialize refraction waves
+        for (let i = 0; i < waveCount; i++) {
+            waves.push(new RefractionWave());
+        }
+
+        // ============================================
+        // ANIMATION LOOP
+        // ============================================
         function animate() {
+            // Clear smoke canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            particles.forEach(particle => {
+            // Update and draw smoke
+            smokeParticles.forEach(particle => {
                 particle.update();
                 particle.draw();
             });
 
-            connectParticles();
+            // Clear refraction canvas
+            refractionCtx.clearRect(0, 0, refractionCanvas.width, refractionCanvas.height);
+
+            // Update and draw refraction waves
+            waves.forEach(wave => {
+                wave.update();
+                wave.draw();
+            });
 
             requestAnimationFrame(animate);
         }
 
         animate();
 
-        // Resize canvas on window resize
+        // ============================================
+        // MOUSE TRACKING
+        // ============================================
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        // ============================================
+        // RESIZE HANDLER
+        // ============================================
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            refractionCanvas.width = window.innerWidth;
+            refractionCanvas.height = window.innerHeight;
         });
 
         // ============================================
@@ -819,12 +862,7 @@
             const email = prompt('Ingresa tu email para recibir notificaciones del lanzamiento:');
             
             if (email && email.includes('@')) {
-                // Here you would normally send this to a backend
-                // For now, we'll just show a confirmation
                 alert('¡Perfecto! Te notificaremos cuando el experimento comience.\n\nMientras tanto, sígueme en las redes para no perderte nada.');
-                
-                // Optional: Send to Google Forms or similar
-                // window.open(`https://docs.google.com/forms/d/e/YOUR_FORM_ID/viewform?entry.EMAIL=${email}`, '_blank');
             } else if (email) {
                 alert('Email inválido. Inténtalo de nuevo.');
             }
