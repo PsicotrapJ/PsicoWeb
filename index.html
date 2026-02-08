@@ -1,207 +1,1282 @@
-<!-- ======= PASILLO 3D — PERSPECTIVA, TECHO/PISO, GIRO COMPLETO ======= -->
-<section class="corridor" id="corridor">
-  <div class="camera" id="camera">
-    <div class="scene" id="scene"></div>
-  </div>
-  <div class="hud">
-    ↑/↓ (W/S) avanzar · ←/→ (A/D) girar · mouse mira · <b>clic derecho</b> o <b>Shift+arrastrar</b> para girar libre · <b>Espacio</b> encarar panel
-  </div>
-</section>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSICOTRAP REVENUE COMMAND</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&family=Courier+Prime:wght@400;700&family=Audiowide&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-<style>
-  :root{ --bg1:#121a3a; --bg2:#0c122c; --bg3:#070b16; --glowC:#00f0ff; --glowF:#ff1fd8; }
-  .corridor{
-    position:relative; height:90vh; width:min(1200px,95vw);
-    margin:24px auto; border-radius:18px; overflow:hidden;
-    /* perspectiva más fuerte */
-    perspective: 800px;
-    background: radial-gradient(1600px 1000px at 50% 18%, var(--bg1) 0%, var(--bg2) 45%, var(--bg3) 85%);
-    box-shadow: 0 24px 70px rgba(0,0,0,.6),
-                inset 0 0 220px rgba(255,31,216,.12),
-                inset 0 0 220px rgba(0,240,255,.10);
-    user-select:none; touch-action:none;
-  }
-  .camera{ position:absolute; inset:0; transform-style:preserve-3d; will-change:transform; }
-  .scene { position:absolute; inset:0; transform-style:preserve-3d; will-change:transform; }
+        :root {
+            --neural-red: #ff0033;
+            --neural-cyan: #00fff2;
+            --neural-yellow: #ffed00;
+            --void-black: #000000;
+            --neural-green: #00ff41;
+        }
 
-  /* paneles “puerta” */
-  .panel{
-    position:absolute; transform-style:preserve-3d;
-    width:22vw; max-width:320px; aspect-ratio:9/16; border-radius:14px; overflow:hidden;
-    background:#0b0f1c;
-    box-shadow: 0 12px 38px rgba(0,0,0,.55),
-                inset 0 0 36px rgba(255,31,216,.30),
-                inset 0 0 36px rgba(0,240,255,.26);
-  }
-  .panel::before{
-    content:""; position:absolute; inset:0; border-radius:inherit; border:2px solid rgba(255,255,255,.06);
-    box-shadow: 0 0 22px rgba(0,240,255,.4), 0 0 52px rgba(255,31,216,.34), inset 0 0 34px rgba(0,0,0,.65);
-    pointer-events:none;
-  }
-  .panel iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; background:#000; }
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--void-black);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-  /* piso y techo con grid */
-  .plane{
-    position:absolute; left:50%; top:50%; width:4200px; height:4200px;
-    transform-style:preserve-3d; pointer-events:none; opacity:.9;
-    background:
-      radial-gradient(1200px 800px at 50% 50%, rgba(0,240,255,.08), rgba(255,31,216,.06), rgba(0,0,0,0) 70%),
-      repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 2px, transparent 2px 60px),
-      repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 60px);
-    filter: blur(.2px);
-  }
-  .plane.floor{ transform: translate3d(-50%,-50%, -200px) rotateX(90deg); box-shadow: 0 -40px 120px rgba(0,0,0,.7) inset; }
-  .plane.ceiling{ transform: translate3d(-50%,-50%, -200px) rotateX(-90deg); opacity:.6; }
+        .neural-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 242, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 242, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
 
-  .hud{ position:absolute; bottom:10px; width:100%; text-align:center; font-size:12px; opacity:.9; color:#e8ecff; text-shadow:0 2px 8px rgba(0,0,0,.75); pointer-events:none; }
-  .speed-blur{ filter: blur(1px) saturate(115%); }
-  @media (max-width:800px){ .panel{ width:36vw; } }
-</style>
+        /* LOGIN */
+        .auth-gate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1a0000 0%, #000000 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
 
-<script>
-(function(){
-  /* === TUS SHORTS === */
-  const LEFT_VIDEOS  = ["bG5kLiHUqps","WYs4CVCk0VY","SzifIQH0DvM","K2qWjAxmng8","sSu4GRr4OfA"];
-  const RIGHT_VIDEOS = ["5EqRXSvToAU","zEwEcDToCv0","0pymj3yG7C4","EqJeIEEUuXE","pldK8RHRsHE"];
+        .auth-gate.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
 
-  const corridor = document.getElementById('corridor');
-  const cameraEl = document.getElementById('camera');
-  const scene    = document.getElementById('scene');
+        .auth-container {
+            text-align: center;
+        }
 
-  /* ===== Pisos/techos ===== */
-  const floor   = document.createElement('div'); floor.className   = 'plane floor';
-  const ceiling = document.createElement('div'); ceiling.className = 'plane ceiling';
-  scene.appendChild(floor); scene.appendChild(ceiling);
+        .neural-logo {
+            font-family: 'Audiowide', cursive;
+            font-size: 64px;
+            font-weight: 700;
+            color: var(--neural-red);
+            text-shadow: 0 0 20px var(--neural-red), 0 0 40px var(--neural-red);
+            margin-bottom: 10px;
+            letter-spacing: 8px;
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
 
-  /* ===== Geometría del pasillo ===== */
-  const spacingZ = 1400;          // distancia entre puertas
-  const doorX    = 520;           // distancia lateral
-  const count    = Math.max(LEFT_VIDEOS.length, RIGHT_VIDEOS.length);
+        @keyframes pulseGlow {
+            0%, 100% { text-shadow: 0 0 20px var(--neural-red), 0 0 40px var(--neural-red); }
+            50% { text-shadow: 0 0 30px var(--neural-red), 0 0 60px var(--neural-red), 0 0 80px var(--neural-red); }
+        }
 
-  /* ===== Crear paneles ===== */
-  const panels = [];
-  function addPanel(side, i, id){
-    const el = document.createElement('div');
-    el.className = 'panel';
-    const z = -i * spacingZ;
-    const x = (side==='L' ? -doorX : doorX);
-    const rotY = (side==='L' ? 90 : -90);  // miran al centro
-    el.style.transform = `translate3d(${x}px,0,${z}px) rotateY(${rotY}deg)`;
-    el.dataset.z = z; el.dataset.side = side;
+        .neural-subtitle {
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            color: var(--neural-cyan);
+            letter-spacing: 4px;
+            margin-bottom: 50px;
+            opacity: 0.7;
+        }
 
-    const ifr = document.createElement('iframe');
-    ifr.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
-    ifr.loading = "lazy";
-    ifr.src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}&playsinline=1&modestbranding=1&rel=0`;
-    el.appendChild(ifr);
+        .google-auth-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            padding: 18px 40px;
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid var(--neural-cyan);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
 
-    scene.appendChild(el); panels.push(el);
-  }
-  for(let i=0;i<count;i++){
-    addPanel('L', i, LEFT_VIDEOS[i % LEFT_VIDEOS.length]);
-    addPanel('R', i, RIGHT_VIDEOS[i % RIGHT_VIDEOS.length]);
-  }
+        .google-auth-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--neural-cyan), transparent);
+            transition: left 0.5s ease;
+        }
 
-  /* ===== Movimiento fluido + head tracking ===== */
-  let cameraZ = 0, speedZ = 0;
-  const FRICTION = 0.92;
-  const IMP_SCROLL = 0.22, IMP_KEYS = 42;
+        .google-auth-btn:hover::before {
+            left: 100%;
+        }
 
-  // mirar/girar
-  const look = {
-    maxYaw: 85,        // ←→ giro máximo (para ver de FRENTE los paneles)
-    maxPitch: 8,       // arriba/abajo
-    maxRoll: 4,
-    strafe: 120,       // parallax lateral
-    ease: 0.09
-  };
-  let yaw=0,pitch=0,roll=0,strafe=0, tyaw=0,tpitch=0,troll=0,tstrafe=0;
+        .google-auth-btn:hover {
+            box-shadow: 0 0 30px var(--neural-cyan);
+            transform: scale(1.05);
+        }
 
-  // scroll = impulso
-  corridor.addEventListener('wheel', e=>{ speedZ += -e.deltaY * IMP_SCROLL; }, {passive:true});
-  // teclas avanzar/retroceder + girar
-  window.addEventListener('keydown', e=>{
-    const k=e.key.toLowerCase();
-    if(k==='arrowup'||k==='w') speedZ -= IMP_KEYS;
-    if(k==='arrowdown'||k==='s') speedZ += IMP_KEYS;
-    if(k==='arrowleft'||k==='a') tyaw = Math.min(look.maxYaw, tyaw + 8);
-    if(k==='arrowright'||k==='d') tyaw = Math.max(-look.maxYaw, tyaw - 8);
-    if(k===' ') snapFaceNearest(); // encarar el panel más cercano
-  });
+        /* COMMAND CENTER */
+        .command-center {
+            display: none;
+            position: relative;
+            z-index: 1;
+            padding: 20px;
+            max-width: 1920px;
+            margin: 0 auto;
+        }
 
-  // head-tracking con mouse (suave, no llega a ±85 por sí solo)
-  window.addEventListener('mousemove', e=>{
-    const r=corridor.getBoundingClientRect();
-    const nx=(e.clientX-r.left)/r.width*2-1, ny=(e.clientY-r.top)/r.height*2-1;
-    tpitch =  ny*look.maxPitch*0.6;
-    tstrafe = nx*look.strafe*0.6;
-    troll   = -nx*look.maxRoll*0.6;
-  }, {passive:true});
+        .command-center.active {
+            display: block;
+            animation: bootSequence 0.8s ease-out;
+        }
 
-  // arrastrar para GIRAR (clic derecho) o Shift+arrastrar
-  let dragLook=false, dragMove=false, lastX=0, lastY=0;
-  corridor.addEventListener('pointerdown', e=>{
-    lastX=e.clientX; lastY=e.clientY;
-    if(e.button===2 || e.shiftKey){ dragLook=true; } else { dragMove=true; }
-    corridor.setPointerCapture?.(e.pointerId);
-  });
-  corridor.addEventListener('contextmenu', e=>e.preventDefault());
-  window.addEventListener('pointermove', e=>{
-    if(dragMove){ const dy=e.clientY-lastY; lastY=e.clientY; speedZ += dy*0.9; }
-    if(dragLook){
-      const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
-      tyaw = clamp(tyaw - dx*0.25, -look.maxYaw, look.maxYaw);
-      tpitch = clamp(tpitch + dy*0.15, -look.maxPitch, look.maxPitch);
-      tstrafe = clamp(tstrafe - dx*0.30, -look.strafe, look.strafe);
-      troll   = clamp(troll - dx*0.06, -look.maxRoll, look.maxRoll);
-    }
-  }, {passive:true});
-  window.addEventListener('pointerup', ()=>{ dragLook=false; dragMove=false; });
+        @keyframes bootSequence {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
 
-  function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+        /* HEADER */
+        .neural-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: rgba(255, 0, 51, 0.05);
+            border: 1px solid rgba(255, 0, 51, 0.3);
+            margin-bottom: 20px;
+            position: relative;
+        }
 
-  // encarar automáticamente el panel más cercano (snap a ±90°)
-  function snapFaceNearest(){
-    // si la última rotación fue a la izquierda, apuntamos a -90, si no a +90, según qué lado esté más cerca
-    // medimos distancia lateral estimada (signo del tyaw actual sirve)
-    const wantLeft = (tyaw>0);           // mirando a la izquierda
-    const target = wantLeft ? 90 : -90;  // mirar de frente el panel de ese lado
-    tyaw = clamp(target, -look.maxYaw, look.maxYaw);
-    // también centramos parallax para “pegarse” al lado elegido
-    tstrafe = clamp((target>0?1:-1) * look.strafe, -look.strafe, look.strafe);
-  }
+        .neural-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--neural-red), var(--neural-cyan), var(--neural-red));
+        }
 
-  function animate(){
-    // caminar con inercia
-    cameraZ += speedZ;
-    speedZ  *= FRICTION;
+        .header-brand {
+            font-family: 'Audiowide', cursive;
+            font-size: 24px;
+            color: var(--neural-red);
+            text-shadow: 0 0 10px var(--neural-red);
+        }
 
-    // suavizado de mirada/parallax
-    yaw   += (tyaw   - yaw)   * look.ease;
-    pitch += (tpitch - pitch) * look.ease;
-    roll  += (troll  - roll)  * look.ease;
-    strafe+= (tstrafe- strafe)* look.ease;
+        .neural-status {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            font-family: 'Courier Prime', monospace;
+            font-size: 12px;
+        }
 
-    cameraEl.style.transform =
-      `translate3d(${strafe}px,0,0) rotateX(${pitch}deg) rotateY(${yaw}deg) rotateZ(${roll}deg)`;
-    scene.style.transform = `translateZ(${cameraZ}px)`;
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--neural-green);
+            box-shadow: 0 0 10px var(--neural-green);
+            animation: statusPulse 2s ease-in-out infinite;
+        }
 
-    // blur por velocidad
-    scene.classList.toggle('speed-blur', Math.abs(speedZ)>6);
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
 
-    // reciclar paneles para loop infinito
-    for(const p of panels){
-      let z = parseFloat(p.dataset.z);
-      if(z + cameraZ > 800){
-        z -= spacingZ * count;
-        p.dataset.z = z;
-        const side=p.dataset.side, rotY=(side==='L'?90:-90), x=(side==='L'?-doorX:doorX);
-        p.style.transform = `translate3d(${x}px,0,${z}px) rotateY(${rotY}deg)`;
-      }
-    }
-    requestAnimationFrame(animate);
-  }
-  animate();
-})();
-</script>
-<!-- ======= /PASILLO 3D ======= -->
+        /* MAIN LAYOUT */
+        .neural-grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+        }
+
+        .decision-engine {
+            background: rgba(0, 255, 242, 0.02);
+            border: 1px solid rgba(0, 255, 242, 0.2);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 255, 242, 0.2);
+        }
+
+        .section-title {
+            font-family: 'Audiowide', cursive;
+            font-size: 18px;
+            color: var(--neural-cyan);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .timestamp {
+            font-family: 'Courier Prime', monospace;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* REVENUE SOURCES */
+        .revenue-source {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 3px solid var(--source-color);
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .revenue-source:hover {
+            background: rgba(0, 0, 0, 0.8);
+            border-color: var(--source-color);
+        }
+
+        .revenue-platform {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .revenue-amount {
+            font-family: 'Courier Prime', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--source-color);
+            margin-bottom: 5px;
+        }
+
+        .revenue-metric {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 5px;
+        }
+
+        .revenue-growth {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .delta-positive { color: var(--neural-green); }
+        .delta-negative { color: var(--neural-red); }
+
+        /* CHART */
+        .chart-zone {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 242, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            height: 300px;
+        }
+
+        /* PLATFORM MATRIX */
+        .platform-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .platform-node {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .platform-node::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--platform-accent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .platform-node:hover::before {
+            opacity: 1;
+        }
+
+        .platform-node:hover {
+            background: rgba(0, 0, 0, 0.8);
+            border-color: var(--platform-accent);
+        }
+
+        .platform-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .platform-value {
+            font-family: 'Courier Prime', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--platform-accent);
+            margin-bottom: 5px;
+        }
+
+        .platform-delta {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* NEURAL BRAIN */
+        .neural-brain {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 0, 51, 0.3);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 120px);
+            position: sticky;
+            top: 20px;
+        }
+
+        .brain-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 0, 51, 0.3);
+            background: rgba(255, 0, 51, 0.05);
+        }
+
+        .brain-title {
+            font-family: 'Audiowide', cursive;
+            font-size: 16px;
+            color: var(--neural-red);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .brain-subtitle {
+            font-family: 'Courier Prime', monospace;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .brain-conversation {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .neural-message {
+            padding: 15px;
+            max-width: 90%;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        @keyframes messageSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .neural-message.ai {
+            background: rgba(255, 0, 51, 0.1);
+            border-left: 2px solid var(--neural-red);
+            align-self: flex-start;
+        }
+
+        .neural-message.user {
+            background: rgba(0, 255, 242, 0.1);
+            border-left: 2px solid var(--neural-cyan);
+            align-self: flex-end;
+        }
+
+        .message-role {
+            font-family: 'Courier Prime', monospace;
+            font-size: 10px;
+            color: var(--neural-yellow);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .message-content {
+            font-size: 13px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .brain-input-zone {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 0, 51, 0.3);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .brain-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 255, 242, 0.3);
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .brain-input:focus {
+            border-color: var(--neural-cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 242, 0.2);
+        }
+
+        /* RECOMMENDATIONS */
+        .neural-recommendation {
+            background: linear-gradient(135deg, rgba(255, 0, 51, 0.08) 0%, rgba(0, 255, 242, 0.08) 100%);
+            border-left: 3px solid var(--neural-red);
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .neural-recommendation:hover {
+            background: linear-gradient(135deg, rgba(255, 0, 51, 0.15) 0%, rgba(0, 255, 242, 0.15) 100%);
+            border-left-color: var(--neural-cyan);
+            transform: translateX(5px);
+        }
+
+        .recommendation-priority {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--neural-red);
+            color: #000;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--neural-cyan);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .recommendation-body {
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 10px;
+        }
+
+        .recommendation-metrics {
+            display: flex;
+            gap: 15px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 11px;
+            color: var(--neural-yellow);
+        }
+
+        /* ACTION CARDS */
+        .action-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .action-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 242, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .action-card:hover::before {
+            left: 100%;
+        }
+
+        .action-card:hover {
+            border-color: var(--neural-cyan);
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .action-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .action-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--neural-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* TYPING INDICATOR */
+        .typing-indicator {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--neural-red);
+            animation: typingBounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .neural-grid-layout {
+                grid-template-columns: 1fr;
+            }
+            .neural-brain {
+                position: relative;
+                top: 0;
+                height: 500px;
+            }
+            .platform-matrix {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--neural-red);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neural-cyan);
+        }
+    </style>
+</head>
+<body>
+    <div class="neural-grid"></div>
+
+    <!-- AUTH GATE -->
+    <div class="auth-gate" id="authGate">
+        <div class="auth-container">
+            <div class="neural-logo">PSICOTRAP</div>
+            <div class="neural-subtitle">REVENUE COMMAND CENTER</div>
+            <button class="google-auth-btn" id="authBtn">
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                <span>ACCESO UNIVERSAL</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- COMMAND CENTER -->
+    <div class="command-center" id="commandCenter">
+        <!-- HEADER -->
+        <div class="neural-header">
+            <div class="header-brand">PSICOTRAP REVENUE</div>
+            <div class="neural-status">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="status-dot"></span>
+                    <span>PLATAFORMAS: 4/4</span>
+                </div>
+                <div>
+                    <span id="liveTime">--:--:--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN GRID -->
+        <div class="neural-grid-layout">
+            <!-- LEFT COLUMN -->
+            <div>
+                <!-- REVENUE INTELLIGENCE -->
+                <div class="decision-engine">
+                    <div class="section-header">
+                        <div class="section-title">💰 REVENUE INTELLIGENCE</div>
+                        <div class="timestamp">CONSOLIDADO MULTIPLATAFORMA</div>
+                    </div>
+
+                    <!-- REVENUE SUMMARY -->
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div style="background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 255, 242, 0.2); padding: 25px;">
+                            <div style="font-size: 11px; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
+                                Revenue Total (últimos 30 días)
+                            </div>
+                            <div style="font-family: 'Courier Prime', monospace; font-size: 48px; font-weight: 700; color: var(--neural-green); line-height: 1; margin-bottom: 15px;">
+                                $2,830
+                            </div>
+                            <div style="display: flex; gap: 15px; font-size: 12px; color: rgba(255, 255, 255, 0.7);">
+                                <span class="delta-positive">↗ +18% vs mes anterior</span>
+                                <span>|</span>
+                                <span>Proyección 90d: <strong style="color: var(--neural-yellow);">$6,710</strong></span>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255, 0, 51, 0.08); border: 1px solid rgba(255, 0, 51, 0.3); padding: 25px;">
+                            <div style="font-size: 11px; color: var(--neural-red); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
+                                Acción Mayor ROI
+                            </div>
+                            <div style="font-size: 16px; font-weight: 700; color: var(--neural-cyan); margin-bottom: 8px;">
+                                Spotify Playlists
+                            </div>
+                            <div style="font-size: 13px; color: rgba(255, 255, 255, 0.8); line-height: 1.5;">
+                                <div>Esfuerzo: 6 horas</div>
+                                <div>Retorno: <strong style="color: var(--neural-yellow);">+$890/mes</strong></div>
+                                <div>Recurrente</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REVENUE BREAKDOWN -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+                        <div class="revenue-source" style="--source-color: #1DB954;">
+                            <div class="revenue-platform">Spotify</div>
+                            <div class="revenue-amount">$2,200</div>
+                            <div class="revenue-metric">567K streams</div>
+                            <div class="revenue-growth delta-positive">↗ +12%</div>
+                        </div>
+                        <div class="revenue-source" style="--source-color: #FF0000;">
+                            <div class="revenue-platform">YouTube</div>
+                            <div class="revenue-amount">$450</div>
+                            <div class="revenue-metric">1.2M views</div>
+                            <div class="revenue-growth delta-positive">↗ +8%</div>
+                        </div>
+                        <div class="revenue-source" style="--source-color: #00f2ea;">
+                            <div class="revenue-platform">TikTok</div>
+                            <div class="revenue-amount">$180</div>
+                            <div class="revenue-metric">Creator Fund</div>
+                            <div class="revenue-growth delta-positive">↗ +342%</div>
+                        </div>
+                        <div class="revenue-source" style="--source-color: #ffed00;">
+                            <div class="revenue-platform">Brand Deals</div>
+                            <div class="revenue-amount">$0</div>
+                            <div class="revenue-metric">Potencial activo</div>
+                            <div class="revenue-growth" style="color: rgba(255, 255, 255, 0.4);">Setup req.</div>
+                        </div>
+                    </div>
+
+                    <!-- MONETIZATION STATUS -->
+                    <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); padding: 20px;">
+                        <div style="font-size: 14px; font-weight: 700; color: var(--neural-cyan); margin-bottom: 15px; text-transform: uppercase;">
+                            Estado de Monetización
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 13px; font-weight: 600;">YouTube Partner</span>
+                                    <span style="font-size: 11px; padding: 3px 10px; background: var(--neural-green); color: #000; border-radius: 3px; font-weight: 700;">✓ ACTIVO</span>
+                                </div>
+                                <div style="font-size: 11px; color: rgba(255, 255, 255, 0.6);">
+                                    45.3K subs • Monetización habilitada
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 13px; font-weight: 600;">Spotify for Artists</span>
+                                    <span style="font-size: 11px; padding: 3px 10px; background: var(--neural-green); color: #000; border-radius: 3px; font-weight: 700;">✓ ACTIVO</span>
+                                </div>
+                                <div style="font-size: 11px; color: rgba(255, 255, 255, 0.6);">
+                                    567K streams • Pagos automáticos
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 13px; font-weight: 600;">TikTok Creator</span>
+                                    <span style="font-size: 11px; padding: 3px 10px; background: var(--neural-green); color: #000; border-radius: 3px; font-weight: 700;">✓ ACTIVO</span>
+                                </div>
+                                <div style="font-size: 11px; color: rgba(255, 255, 255, 0.6);">
+                                    128K followers • Fund elegible
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 13px; font-weight: 600;">Instagram</span>
+                                    <span style="font-size: 11px; padding: 3px 10px; background: var(--neural-yellow); color: #000; border-radius: 3px; font-weight: 700;">⚠ POTENCIAL</span>
+                                </div>
+                                <div style="font-size: 11px; color: rgba(255, 255, 255, 0.6);">
+                                    67.8K followers • Brand deals ~$400-800/post
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OPTIMIZATION -->
+                    <div style="margin-top: 20px; background: linear-gradient(135deg, rgba(255, 237, 0, 0.05) 0%, rgba(0, 255, 242, 0.05) 100%); border-left: 3px solid var(--neural-yellow); padding: 20px;">
+                        <div style="font-size: 14px; font-weight: 700; color: var(--neural-yellow); margin-bottom: 12px; text-transform: uppercase;">
+                            ⚡ Plan de Optimización: Próximos 30 días
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px; line-height: 1.6;">
+                            <div>
+                                <strong style="color: var(--neural-cyan);">1. Spotify Playlists</strong> — Pitch con nuevo single → 
+                                <span style="color: var(--neural-green);">+$890/mes recurrente</span> (6h)
+                            </div>
+                            <div>
+                                <strong style="color: var(--neural-cyan);">2. YouTube Serie</strong> — 4 eps "Psicotrap Genesis" → 
+                                <span style="color: var(--neural-green);">+$180/mes</span> (inversión: $150-200)
+                            </div>
+                            <div>
+                                <strong style="color: var(--neural-cyan);">3. Brand Deals IG</strong> — 1-2 deals/mes → 
+                                <span style="color: var(--neural-green);">+$400-800</span> (crear media kit)
+                            </div>
+                            <div>
+                                <strong style="color: var(--neural-cyan);">4. Productos Digitales</strong> — Stems/presets → 
+                                <span style="color: var(--neural-green);">+$200-400/mes</span> pasivo
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COMPARATIVE CHART -->
+                <div class="decision-engine">
+                    <div class="section-header">
+                        <div class="section-title">📊 Evolución Comparativa</div>
+                        <div class="timestamp" id="lastUpdate">--</div>
+                    </div>
+                    <div class="chart-zone">
+                        <canvas id="unifiedChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- PLATFORM MATRIX -->
+                <div class="decision-engine">
+                    <div class="section-header">
+                        <div class="section-title">Matriz de Plataformas</div>
+                    </div>
+                    <div class="platform-matrix">
+                        <div class="platform-node" style="--platform-accent: #FF0000;">
+                            <div class="platform-label">YouTube</div>
+                            <div class="platform-value">1.2M</div>
+                            <div class="platform-delta delta-positive">↗ +15% • 45.3K subs</div>
+                        </div>
+                        <div class="platform-node" style="--platform-accent: #E4405F;">
+                            <div class="platform-label">Instagram</div>
+                            <div class="platform-value">890K</div>
+                            <div class="platform-delta delta-positive">↗ +22% • 67.8K followers</div>
+                        </div>
+                        <div class="platform-node" style="--platform-accent: #00f2ea;">
+                            <div class="platform-label">TikTok</div>
+                            <div class="platform-value">3.4M</div>
+                            <div class="platform-delta delta-positive">↗ +342% • 128K followers</div>
+                        </div>
+                        <div class="platform-node" style="--platform-accent: #1DB954;">
+                            <div class="platform-label">Spotify</div>
+                            <div class="platform-value">567K</div>
+                            <div class="platform-delta delta-positive">↗ +8% • 45.2K monthly</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RECOMMENDATIONS -->
+                <div class="decision-engine">
+                    <div class="section-header">
+                        <div class="section-title">Decisiones Priorizadas</div>
+                    </div>
+
+                    <div class="neural-recommendation" data-action="spotify-playlists">
+                        <div class="recommendation-priority">MÁXIMO ROI</div>
+                        <div class="recommendation-title">🎵 Infiltrar Playlists Spotify Editorial</div>
+                        <div class="recommendation-body">
+                            Pitch optimizado a 8 playlists target con nuevo single. Timing: 3 semanas pre-lanzamiento. Descripción con keywords algorítmicos + analogías estratégicas. Probabilidad playlists pequeñas: 60%, medianas: 30%.
+                        </div>
+                        <div class="recommendation-metrics">
+                            <span>IMPACTO: +$890/mes recurrente</span>
+                            <span>ESFUERZO: 6h</span>
+                            <span>ROI: ALTO</span>
+                        </div>
+                    </div>
+
+                    <div class="neural-recommendation" data-action="tiktok-challenge">
+                        <div class="recommendation-priority" style="background: var(--neural-yellow); color: #000;">VIRALIDAD ACTIVA</div>
+                        <div class="recommendation-title">⚡ Challenge TikTok (+342% growth)</div>
+                        <div class="recommendation-body">
+                            Ventana 48-72h para capitalizar momentum. "Psicotrap Glitch Challenge" - 18 seg, hook visual segundo 2. Formato: situación normal → glitch → movimiento signature → vuelta realidad alterada.
+                        </div>
+                        <div class="recommendation-metrics">
+                            <span>IMPACTO: +$340 (7 días)</span>
+                            <span>VIRAL PROB: 74%</span>
+                            <span>ESFUERZO: 6h</span>
+                        </div>
+                    </div>
+
+                    <div class="neural-recommendation" data-action="brand-deals">
+                        <div class="recommendation-priority" style="background: var(--neural-green); color: #000;">MONETIZACIÓN DIRECTA</div>
+                        <div class="recommendation-title">💼 Activar Brand Deals Instagram</div>
+                        <div class="recommendation-body">
+                            67.8K followers = potencial $400-800/post. Crear media kit profesional + pitch a marcas alineadas con Psicotrap (audio tech, streetwear, plataformas creativas). 1-2 deals/mes sostenibles.
+                        </div>
+                        <div class="recommendation-metrics">
+                            <span>IMPACTO: +$400-800/mes</span>
+                            <span>SETUP: 1 día</span>
+                            <span>RECURRENTE</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACTION ROW -->
+                <div class="action-row">
+                    <div class="action-card" data-action="revenue-breakdown">
+                        <div class="action-icon">📊</div>
+                        <div class="action-label">Revenue Breakdown</div>
+                    </div>
+                    <div class="action-card" data-action="growth-scenarios">
+                        <div class="action-icon">📈</div>
+                        <div class="action-label">Escenarios Crecimiento</div>
+                    </div>
+                    <div class="action-card" data-action="time-optimization">
+                        <div class="action-icon">⏱️</div>
+                        <div class="action-label">Optimizar Tiempo</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: NEURAL BRAIN -->
+            <div class="neural-brain">
+                <div class="brain-header">
+                    <div class="brain-title">NEURAL BRAIN</div>
+                    <div class="brain-subtitle">Revenue & Estrategia Unificada</div>
+                </div>
+                <div class="brain-conversation" id="brainConversation">
+                    <div class="neural-message ai">
+                        <div class="message-role">NEURAL BRAIN • ANÁLISIS REVENUE</div>
+                        <div class="message-content">
+                            Sistema inicializado. Revenue actual: $2,830/mes. Proyección 90 días ejecutando plan: $6,710/mes (+137%). Acción de mayor ROI: Spotify playlists (+$890/mes por 6h esfuerzo). ¿Ejecutamos o analizas otra variable?
+                        </div>
+                    </div>
+                </div>
+                <div class="brain-input-zone">
+                    <input 
+                        type="text" 
+                        class="brain-input" 
+                        id="brainInput" 
+                        placeholder="Análisis revenue, estrategia, optimización..."
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // AUTH
+        document.getElementById('authBtn').addEventListener('click', function() {
+            setTimeout(() => {
+                document.getElementById('authGate').classList.add('hidden');
+                document.getElementById('commandCenter').classList.add('active');
+                initializeSystem();
+            }, 800);
+        });
+
+        // SYSTEM INIT
+        function initializeSystem() {
+            updateLiveTime();
+            setInterval(updateLiveTime, 1000);
+            initChart();
+            updateLastUpdateTime();
+        }
+
+        function updateLiveTime() {
+            const now = new Date();
+            document.getElementById('liveTime').textContent = now.toLocaleTimeString('es-AR', { hour12: false });
+        }
+
+        function updateLastUpdateTime() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = 'ÚLTIMA ACTUALIZACIÓN: ' + now.toLocaleDateString('es-AR') + ' ' + now.toLocaleTimeString('es-AR');
+        }
+
+        // CHART
+        function initChart() {
+            const ctx = document.getElementById('unifiedChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                    datasets: [
+                        {
+                            label: 'YouTube',
+                            data: [120000, 135000, 142000, 156000, 178000, 198000, 215000],
+                            borderColor: '#FF0000',
+                            backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Instagram',
+                            data: [89000, 95000, 102000, 118000, 135000, 148000, 167000],
+                            borderColor: '#E4405F',
+                            backgroundColor: 'rgba(228, 64, 95, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'TikTok',
+                            data: [234000, 267000, 312000, 398000, 489000, 612000, 756000],
+                            borderColor: '#00f2ea',
+                            backgroundColor: 'rgba(0, 242, 234, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Spotify',
+                            data: [45000, 48000, 51000, 54000, 58000, 62000, 67000],
+                            borderColor: '#1DB954',
+                            backgroundColor: 'rgba(29, 185, 84, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                font: { family: 'Courier Prime', size: 11 },
+                                usePointStyle: true
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0, 255, 242, 0.05)' },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.5)',
+                                font: { family: 'Courier Prime', size: 10 },
+                                callback: value => value >= 1000 ? (value/1000) + 'K' : value
+                            }
+                        },
+                        x: {
+                            grid: { color: 'rgba(0, 255, 242, 0.05)' },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.5)',
+                                font: { family: 'Courier Prime', size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // NEURAL BRAIN
+        const brainInput = document.getElementById('brainInput');
+        const brainConversation = document.getElementById('brainConversation');
+
+        brainInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.trim()) {
+                const userQuery = this.value.trim();
+                addMessage('TÚ', userQuery, 'user');
+                this.value = '';
+                showTyping();
+                setTimeout(() => {
+                    removeTyping();
+                    addMessage('NEURAL BRAIN', generateResponse(userQuery), 'ai');
+                }, 1500);
+            }
+        });
+
+        function addMessage(role, content, type) {
+            const msg = document.createElement('div');
+            msg.className = `neural-message ${type}`;
+            msg.innerHTML = `<div class="message-role">${role}</div><div class="message-content">${content}</div>`;
+            brainConversation.appendChild(msg);
+            brainConversation.scrollTop = brainConversation.scrollHeight;
+        }
+
+        function showTyping() {
+            const typing = document.createElement('div');
+            typing.className = 'neural-message ai';
+            typing.id = 'typing';
+            typing.innerHTML = `<div class="message-role">NEURAL BRAIN • PROCESANDO</div><div class="message-content"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+            brainConversation.appendChild(typing);
+            brainConversation.scrollTop = brainConversation.scrollHeight;
+        }
+
+        function removeTyping() {
+            const typing = document.getElementById('typing');
+            if (typing) typing.remove();
+        }
+
+        function generateResponse(q) {
+            q = q.toLowerCase();
+
+            if (q.includes('revenue') || q.includes('dinero') || q.includes('ganancia')) {
+                return `ANÁLISIS REVENUE COMPLETO:
+
+**ESTADO ACTUAL (30 días):**
+• Total: $2,830/mes
+• Spotify: $2,200 (78% del revenue)
+• YouTube: $450 (16%)
+• TikTok: $180 (6%)
+• Otros: $0
+
+**PROYECCIÓN 90 DÍAS (ejecutando plan):**
+• Total: $6,710/mes (+137%)
+• Spotify: $4,100 (+70% por playlists)
+• YouTube: $890 (+98% por serie)
+• TikTok: $520 (+190% viralidad sostenida)
+• Brand deals: $800 (activación IG)
+• Productos digitales: $400 (stems/presets)
+
+**PALANCA DE MAYOR ROI:**
+Spotify playlists = +$890/mes recurrente por 6h esfuerzo.
+
+**INVERSIÓN REQUERIDA:**
+~$350-500 (editor YouTube + distribución).
+
+Como Business Analyst: proyecto greenlight, ROI +137% en 90 días.
+
+¿Desglose detallado por plataforma o ejecutamos plan?`;
+            }
+
+            if (q.includes('spotify') || q.includes('playlist')) {
+                return `ESTRATEGIA SPOTIFY - MÁXIMO ROI:
+
+**SITUACIÓN:**
+567K streams, 45.2K oyentes mensuales = $2,200/mes actual.
+
+**OPORTUNIDAD:**
+8 playlists editoriales identificadas:
+• "Psychedelic Trap" (234K) - prob 60%
+• "Experimental Beats" (189K) - prob 60%
+• "Alternative Hip Hop" (567K) - prob 30%
+• "Dark Trap" (423K) - prob 30%
+
+**ACCIÓN:**
+1. Finalizar nuevo single (hoy)
+2. Distribuir (día 7)
+3. Pitch Spotify for Artists (día 10-21)
+4. Lanzamiento (día 28)
+
+**PITCH OPTIMIZADO:**
+"Fusión trap experimental + elementos psicodélicos. Para fans de Travis Scott meets Tame Impala. Producción cinematográfica."
+
+**IMPACTO ESPERADO:**
+• Si entras en 2-3 playlists: +$890/mes recurrente
+• Esfuerzo total: 6 horas
+• ROI por hora: $148/h
+
+**CRÍTICO:**
+Necesitas track LISTO. ¿Lo tienes o producimos primero?`;
+            }
+
+            if (q.includes('tiktok')) {
+                return `TIKTOK - CAPITALIZAR MOMENTUM:
+
+**ESTADO:**
+3.4M vistas, +342% crecimiento semanal. Estás en "zona caliente" algorítmica.
+
+**VENTANA CRÍTICA:**
+48-72 horas. Después, el algoritmo enfría.
+
+**CHALLENGE "PSICOTRAP GLITCH":**
+• Concepto: Glitch mental/visual al ritmo de hook
+• Duración: 18 segundos
+• Hook visual: segundo 2
+• CTA: "Muéstrame tu glitch 🧠⚡"
+
+**PRODUCCIÓN (6h):**
+1h concepto, 2h grabación, 2h edición, 1h publicación.
+
+**PROYECCIÓN:**
+• 180K-450K vistas (prob 74%)
+• Conversión Spotify: +8-12%
+• Revenue: +$340 en 7 días
+
+**TIMING:**
+Martes/Jueves 19:00-21:00 (tu audiencia peak).
+
+¿Guion detallado o pasamos a otra plataforma?`;
+            }
+
+            if (q.includes('brand') || q.includes('instagram') || q.includes('deals')) {
+                return `BRAND DEALS INSTAGRAM - MONETIZACIÓN DIRECTA:
+
+**POTENCIAL:**
+67.8K followers = $400-800/post (benchmark industria).
+
+**ACCIÓN INMEDIATA:**
+1. Crear media kit profesional (1 día):
+   - Alcance (890K)
+   - Demographics (edad, ubicación)
+   - Engagement rate
+   - Case studies (posts previos)
+
+2. Identificar marcas target:
+   - Audio tech (interfaces, plugins, headphones)
+   - Streetwear alineado con Psicotrap
+   - Plataformas creativas (DAWs, software)
+
+3. Pitch personalizado (no masivo):
+   - "Psicotrap no es solo música, es worldbuilding"
+   - Propuesta: integración orgánica, no ad
+
+**PROYECCIÓN:**
+• 1-2 deals/mes sostenibles
+• Revenue: +$400-800/mes
+• Setup: 1 día (media kit)
+
+**CRÍTICO:**
+Autenticidad > cantidad. Solo marcas que encajen con Psicotrap.
+
+¿Creamos media kit o analizas otra variable?`;
+            }
+
+            if (q.includes('tiempo') || q.includes('optimiz')) {
+                return `OPTIMIZACIÓN TIEMPO (padre + profesional + artista):
+
+**REALIDAD:**
+~15-20h/semana para Psicotrap.
+
+**FRAMEWORK 80/20:**
+Tu 20% crítico que genera 80% resultado:
+1. TikTok challenge (6h/semana)
+2. Decisiones creativas core (4h/semana)
+3. Estrategia revenue (2h/semana)
+
+**DELEGAR (libera 12h/semana):**
+• Edición YouTube: $150-200/mes
+• Community management: $320-480/mes (VA 4h/semana)
+• Diseño gráfico: Canva templates + VA
+
+**MATEMÁTICA:**
+Si ganas $X/hora en trabajo tradicional, delega TODO <$X/hora.
+
+**PRIORIZACIÓN REVENUE/HORA:**
+1. Spotify playlists: $148/h
+2. Brand deals IG: $100-133/h
+3. TikTok challenge: $57/h
+4. YouTube serie: $30/h (pero recurrente)
+
+**RECOMENDACIÓN:**
+Invierte tus 20h/semana SOLO en actividades >$50/h.
+
+¿Plan de delegación específico o ejecutamos ya?`;
+            }
+
+            return `ANÁLISIS RECIBIDO.
+
+Como equipo neural, proceso tu consulta desde 6 perspectivas:
+1. Branding
+2. Producción musical
+3. Composición
+4. Dirección visual
+5. Community
+6. Revenue/Negocio
+
+**TU SITUACIÓN:**
+• Revenue actual: $2,830/mes
+• Potencial 90 días: $6,710/mes
+• Acción mayor ROI: Spotify playlists (+$890/mes por 6h)
+
+**NECESITO CONTEXTO:**
+¿Tu consulta es sobre:
+• Revenue breakdown detallado
+• Estrategia específica (Spotify/TikTok/IG/YouTube)
+• Optimización de tiempo
+• Worldbuilding Psicotrap
+• Decisión qué ejecutar primero
+
+Reformula con más detalle y te entrego plan EJECUTABLE.`;
+        }
+
+        // ACTION CARDS
+        document.querySelectorAll('.action-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const action = this.dataset.action;
+                let response = '';
+                if (action === 'revenue-breakdown') response = generateResponse('revenue completo');
+                else if (action === 'growth-scenarios') response = 'ESCENARIOS CRECIMIENTO:\n\n**CONSERVADOR** (prob 80%):\n+$2,400/mes en 90 días\n\n**REALISTA** (prob 60%):\n+$3,880/mes (proyección base)\n\n**OPTIMISTA** (prob 30%):\n+$5,200/mes si TikTok viraliza + 3 playlists Spotify\n\n¿Desglose de cada escenario?';
+                else if (action === 'time-optimization') response = generateResponse('optimizar tiempo');
+                addMessage('NEURAL BRAIN', response, 'ai');
+            });
+        });
+
+        // RECOMMENDATIONS
+        document.querySelectorAll('.neural-recommendation').forEach(card => {
+            card.addEventListener('click', function() {
+                const action = this.dataset.action;
+                let response = '';
+                if (action === 'spotify-playlists') response = generateResponse('spotify playlists');
+                else if (action === 'tiktok-challenge') response = generateResponse('tiktok');
+                else if (action === 'brand-deals') response = generateResponse('brand deals');
+                addMessage('NEURAL BRAIN • PLAN DETALLADO', response, 'ai');
+            });
+        });
+
+        // PLATFORM NODES
+        document.querySelectorAll('.platform-node').forEach(node => {
+            node.addEventListener('click', function() {
+                const platform = this.querySelector('.platform-label').textContent.toLowerCase();
+                addMessage('NEURAL BRAIN • ANÁLISIS PLATAFORMA', generateResponse(platform), 'ai');
+            });
+        });
+    </script>
+</body>
+</html>
