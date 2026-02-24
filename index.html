@@ -20,6 +20,7 @@
             cursor: default;
         }
 
+        /* NIEBLA */
         #canvas-smoke {
             position: fixed; top: 0; left: 0; z-index: 1;
             filter: blur(60px) contrast(1.2); 
@@ -35,6 +36,7 @@
             mix-blend-mode: screen;
         }
 
+        /* TÍTULO */
         .main-title {
             position: absolute; top: 5%; left: 5%;
             font-family: 'Syncopate'; font-size: clamp(2rem, 4vw, 3.5rem);
@@ -83,31 +85,25 @@
             stroke: var(--cyan); stroke-width: 1.5;
             filter: drop-shadow(0 0 15px var(--cyan));
         }
-
         .neon-label {
             display: block; font-family: 'Syncopate'; font-size: 10px; margin-top: 15px;
             color: var(--cyan); opacity: 0; letter-spacing: 4px; transition: 0.4s;
         }
         .nav-item:hover .neon-label { opacity: 1; text-shadow: 0 0 10px var(--cyan); }
 
-        /* REDES SOCIALES: abajo derecha, vertical, sin tapar nada */
+        /* REDES SOCIALES */
         .social-dock {
             position: fixed;
-            bottom: 5%;
-            right: 22%;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 16px;
+            bottom: 5%; left: 5%;
+            display: flex; gap: 30px;
             z-index: 30;
         }
-
         .social-link {
             text-decoration: none; color: rgba(255,255,255,0.4);
-            font-size: 11px; font-family: 'Syncopate';
-            letter-spacing: 3px; transition: 0.3s;
+            font-size: 12px; font-family: 'Syncopate';
+            letter-spacing: 2px; transition: 0.3s;
             border-bottom: 1px solid transparent;
-            padding-bottom: 3px;
+            padding-bottom: 5px;
         }
         .social-link:hover {
             color: var(--fuchsia);
@@ -115,108 +111,140 @@
             text-shadow: 0 0 10px var(--fuchsia);
         }
 
-        /* NOTAS MUSICALES */
-        .notes-column {
-            position: fixed; 
-            right: 4%; top: 50%; transform: translateY(-50%);
-            display: flex; flex-direction: column; gap: 50px; 
-            z-index: 50;
+        /* =====================================================
+           NOTA MUSICAL ÚNICA — esquina inferior derecha
+           posición estratégica: antes del reproductor,
+           sirve de "gatillo" visual para abrirlo
+        ===================================================== */
+        #note-trigger {
+            position: fixed;
+            right: 4%;
+            bottom: 200px; /* justo encima del reproductor */
+            z-index: 60;
+            cursor: pointer;
+            user-select: none;
+            text-align: center;
         }
 
-        .note-btn {
-            font-size: 100px;
-            cursor: pointer;
+        .note-symbol {
+            font-size: 90px;
             color: rgba(0, 242, 255, 0.25);
-            position: relative;
-            user-select: none;
-            transition: color 0.3s ease, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), text-shadow 0.3s ease;
+            display: block;
             animation: notePulse 3s ease-in-out infinite;
+            transition: color 0.3s, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), text-shadow 0.3s;
+            line-height: 1;
         }
-        .note-btn:nth-child(2) { animation-delay: 1s; }
-        .note-btn:nth-child(3) { animation-delay: 2s; }
 
         @keyframes notePulse {
-            0%, 100% { opacity: 0.3; }
-            50%       { opacity: 0.7; }
+            0%, 100% { opacity: 0.25; }
+            50%       { opacity: 0.65; }
         }
 
-        .note-btn:hover {
+        #note-trigger:hover .note-symbol {
             animation-play-state: paused;
             opacity: 1;
             color: var(--cyan);
-            transform: translateX(-10px) scale(1.1);
-            text-shadow: 0 0 20px var(--cyan), 0 0 50px var(--cyan);
+            transform: translateX(-6px) scale(1.12);
+            text-shadow: 0 0 25px var(--cyan), 0 0 60px var(--cyan);
         }
 
-        .note-btn.playing {
+        #note-trigger.playing .note-symbol {
             animation: playingPulse 0.8s ease-in-out infinite alternate !important;
-            animation-play-state: running !important;
             color: white;
-            transform: scale(1.3) translateX(-18px);
+            transform: scale(1.2) translateX(-8px);
         }
 
         @keyframes playingPulse {
-            from { text-shadow: 0 0 20px var(--fuchsia), 0 0 40px var(--fuchsia); opacity: 0.8; }
-            to   { text-shadow: 0 0 50px var(--fuchsia), 0 0 100px var(--fuchsia), 0 0 150px rgba(255,0,224,0.4); opacity: 1; }
+            from { text-shadow: 0 0 20px var(--fuchsia), 0 0 50px var(--fuchsia); opacity: 0.85; }
+            to   { text-shadow: 0 0 60px var(--fuchsia), 0 0 120px var(--fuchsia), 0 0 180px rgba(255,0,224,0.3); opacity: 1; }
         }
 
-        /* INDICADOR NOW PLAYING */
-        .now-playing-label {
-            position: fixed;
-            right: 4%;
-            top: calc(50% - 220px);
+        .note-hint {
             font-family: 'Syncopate';
             font-size: 8px;
-            letter-spacing: 4px;
-            color: rgba(255,0,224,0);
-            transition: color 0.5s ease;
-            z-index: 51;
-            text-align: right;
-            pointer-events: none;
-        }
-        .now-playing-label.visible {
-            color: rgba(255,0,224,0.6);
-            text-shadow: 0 0 10px var(--fuchsia);
-            animation: labelBlink 1.5s ease-in-out infinite;
-        }
-        @keyframes labelBlink {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
+            letter-spacing: 3px;
+            color: rgba(255,255,255,0.15);
+            display: block;
+            margin-top: 6px;
+            transition: color 0.3s, text-shadow 0.3s;
         }
 
-        /* BARRA PROGRESO MINIMALISTA */
-        .mini-progress-bar {
+        #note-trigger:hover .note-hint {
+            color: rgba(0, 242, 255, 0.5);
+            text-shadow: 0 0 8px var(--cyan);
+        }
+
+        /* =====================================================
+           REPRODUCTOR EMBEBIDO — integrado al diseño
+           Panel de cristal oscuro, bordes cyan sutiles
+        ===================================================== */
+        #player-panel {
             position: fixed;
             right: 4%;
-            top: calc(50% + 195px);
-            width: 90px; height: 1px;
-            background: rgba(255,255,255,0.08);
-            z-index: 51;
+            bottom: 3%;
+            width: 260px;
+            z-index: 55;
+
+            /* Panel de cristal oscuro */
+            background: rgba(3, 3, 3, 0.75);
+            border: 1px solid rgba(0, 242, 255, 0.15);
+            border-radius: 12px;
             overflow: hidden;
+            box-shadow:
+                0 0 30px rgba(0, 242, 255, 0.05),
+                inset 0 0 20px rgba(0, 0, 0, 0.5);
+
+            /* Aparece/desaparece */
             opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        .mini-progress-bar.visible { opacity: 1; }
-
-        .mini-progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--cyan), var(--fuchsia));
-            transition: width 0.2s linear;
-            box-shadow: 0 0 6px var(--fuchsia);
-        }
-
-        /* REPRODUCTOR SPOTIFY: completamente oculto, solo audio */
-        #spotify-box { 
-            position: fixed;
-            width: 1px; height: 1px;
-            overflow: hidden; opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
             pointer-events: none;
-            bottom: -200px; left: -200px;
-            z-index: -1;
         }
 
-        /* ELEMENTO CENTRAL */
+        #player-panel.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        /* Borde superior luminoso cuando suena */
+        #player-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,242,255,0.4), rgba(255,0,224,0.4), transparent);
+            z-index: 1;
+        }
+
+        /* Label NOW PLAYING sobre el iframe */
+        #player-panel .player-label {
+            font-family: 'Syncopate';
+            font-size: 7px;
+            letter-spacing: 5px;
+            color: rgba(255,0,224,0.5);
+            text-align: center;
+            padding: 10px 0 6px;
+            display: block;
+            animation: labelBlink 1.5s ease-in-out infinite;
+        }
+
+        @keyframes labelBlink {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; text-shadow: 0 0 8px var(--fuchsia); }
+        }
+
+        #player-panel iframe {
+            display: block;
+            width: 100%;
+            border: none;
+            /* Tema oscuro nativo de Spotify Embed */
+            filter: brightness(0.9) contrast(1.05);
+        }
+
+        /* =====================================================
+           ELEMENTO CENTRAL (MANTENIDO)
+        ===================================================== */
         #center-universe {
             position: fixed;
             left: 50%; top: 50%;
@@ -231,10 +259,7 @@
 
         #waveCanvas { display: block; opacity: 0.6; }
 
-        .center-identity {
-            text-align: center;
-            margin-top: -10px;
-        }
+        .center-identity { text-align: center; margin-top: -10px; }
 
         .center-identity .main-word {
             font-family: 'Syncopate', sans-serif;
@@ -378,26 +403,24 @@
         <a href="https://www.facebook.com/psicotrapj" target="_blank" class="social-link">FACEBOOK</a>
     </div>
 
-    <!-- INDICADORES DE REPRODUCCIÓN -->
-    <div class="now-playing-label" id="nowPlayingLabel">▶ NOW PLAYING</div>
-    <div class="mini-progress-bar" id="miniProgressBar">
-        <div class="mini-progress-fill" id="miniProgressFill"></div>
+    <!-- NOTA MUSICAL ÚNICA — gatillo del reproductor -->
+    <div id="note-trigger" onclick="togglePlayer()">
+        <span class="note-symbol">♫</span>
+        <span class="note-hint">ESCUCHAR</span>
     </div>
 
-    <!-- NOTAS MUSICALES -->
-    <div class="notes-column">
-        <div class="note-btn" onclick="playTrack(this, '4LRPv9db0NH9p19YFW9YUC')">♩</div>
-        <div class="note-btn" onclick="playTrack(this, '0VjCSh0uI5OaG4o7QzE7tB')">♪</div>
-        <div class="note-btn" onclick="playTrack(this, '5o9C22IAsnJ5P3r7IuU8Hk')">♫</div>
-    </div>
-
-    <!-- REPRODUCTOR INVISIBLE -->
-    <div id="spotify-box">
-        <iframe id="spotify-player"
-            src="about:blank"
-            width="300" height="80"
+    <!-- REPRODUCTOR INTEGRADO AL DISEÑO -->
+    <div id="player-panel">
+        <span class="player-label">▶ NOW PLAYING</span>
+        <iframe
+            id="spotify-iframe"
+            src="https://open.spotify.com/embed/artist/4CcWDpVqx4cqBHTjzH1Fmj?utm_source=generator&theme=0"
+            width="100%"
+            height="152"
             frameBorder="0"
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+            allowtransparency="true"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy">
         </iframe>
     </div>
 
@@ -412,7 +435,7 @@
             constructor() {
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height;
-                this.radius = Math.random() * 300 + 150; 
+                this.radius = Math.random() * 300 + 150;
                 this.vx = (Math.random() - 0.5) * 0.2;
                 this.vy = (Math.random() - 0.5) * 0.2;
                 this.opacity = Math.random() * 0.15 + 0.05;
@@ -421,7 +444,7 @@
                 const dx = this.x - mouse.x;
                 const dy = this.y - mouse.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
-                if(dist < 350) {
+                if (dist < 350) {
                     const force = (350 - dist) / 350;
                     const angle = Math.atan2(dy, dx);
                     this.vx += Math.cos(angle) * force * 0.5;
@@ -465,39 +488,20 @@
             aura.style.top = e.clientY + 'px';
         });
 
-        // --- REPRODUCCIÓN ---
-        let progressInterval;
+        // --- TOGGLE REPRODUCTOR ---
+        let playerOpen = false;
 
-        function playTrack(btn, trackId) {
-            document.querySelectorAll('.note-btn').forEach(n => n.classList.remove('playing'));
-            clearInterval(progressInterval);
-            btn.classList.add('playing');
-
-            const player = document.getElementById('spotify-player');
-            player.src = `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&autoplay=1`;
-
-            const label = document.getElementById('nowPlayingLabel');
-            const bar   = document.getElementById('miniProgressBar');
-            const fill  = document.getElementById('miniProgressFill');
-
-            label.classList.add('visible');
-            bar.classList.add('visible');
-            fill.style.width = '0%';
-
-            // ~3:30 min = 210s → 200ms interval = 1050 steps
-            const totalSteps = 1050;
-            let pos = 0;
-            progressInterval = setInterval(() => {
-                pos += (100 / totalSteps);
-                fill.style.width = pos + '%';
-                if (pos >= 100) {
-                    clearInterval(progressInterval);
-                    btn.classList.remove('playing');
-                    label.classList.remove('visible');
-                    bar.classList.remove('visible');
-                    fill.style.width = '0%';
-                }
-            }, 200);
+        function togglePlayer() {
+            const panel = document.getElementById('player-panel');
+            const trigger = document.getElementById('note-trigger');
+            playerOpen = !playerOpen;
+            if (playerOpen) {
+                panel.classList.add('visible');
+                trigger.classList.add('playing');
+            } else {
+                panel.classList.remove('visible');
+                trigger.classList.remove('playing');
+            }
         }
 
         // --- VISUALIZADOR DE ONDA CENTRAL ---
@@ -512,7 +516,7 @@
         const waveLayers = [
             { amp: 28, speed: 0.012, colorA: '0,242,255',   colorB: '255,0,224',   radius: 90,  phase: 0 },
             { amp: 18, speed: 0.018, colorA: '255,0,224',   colorB: '0,242,255',   radius: 70,  phase: Math.PI },
-            { amp: 35, speed: 0.007, colorA: '100,200,255', colorB: '200,100,255', radius: 110, phase: Math.PI/2 },
+            { amp: 35, speed: 0.007, colorA: '100,200,255', colorB: '200,100,255', radius: 110, phase: Math.PI / 2 },
         ];
 
         function drawWaveCircle(layer, t) {
@@ -520,9 +524,10 @@
             wctx.beginPath();
             for (let i = 0; i <= points; i++) {
                 const angle = (i / points) * Math.PI * 2;
-                const noise = Math.sin(angle * 6 + t * layer.speed * 60 + layer.phase) * layer.amp * 0.5
-                            + Math.sin(angle * 3 - t * layer.speed * 40) * layer.amp * 0.3
-                            + Math.cos(angle * 9 + t * layer.speed * 80) * layer.amp * 0.2;
+                const noise =
+                    Math.sin(angle * 6 + t * layer.speed * 60 + layer.phase) * layer.amp * 0.5 +
+                    Math.sin(angle * 3 - t * layer.speed * 40) * layer.amp * 0.3 +
+                    Math.cos(angle * 9 + t * layer.speed * 80) * layer.amp * 0.2;
                 const r = layer.radius + noise;
                 const x = cx + Math.cos(angle) * r;
                 const y = cy + Math.sin(angle) * r;
