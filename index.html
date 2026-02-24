@@ -119,7 +119,7 @@
         #note-trigger {
             position: fixed;
             right: 4%;
-            bottom: 200px; /* justo encima del reproductor */
+            bottom: 430px; /* justo encima del reproductor */
             z-index: 60;
             cursor: pointer;
             user-select: none;
@@ -355,7 +355,7 @@
             <span class="neon-label">EL ORIGEN</span>
         </a>
 
-        <a href="https://open.spotify.com/intl-es/artist/1WBvPa8B3lv2mzTYwkqRN8?si=6jtUkMvlTUGmraPvQw4pOw" target="_blank" class="nav-item">
+        <a href="https://open.spotify.com/artist/4CcWDpVqx4cqBHTjzH1Fmj" target="_blank" class="nav-item">
             <svg class="icon-abstract" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="40"/>
                 <path d="M30 45 Q50 35 70 45 M30 55 Q50 45 70 55 M30 65 Q50 55 70 65" />
@@ -413,12 +413,13 @@
     <div id="player-panel">
         <span class="player-label">▶ NOW PLAYING</span>
         <iframe
-            id="spotify-iframe"
-            src="https://open.spotify.com/embed/artist/4CcWDpVqx4cqBHTjzH1Fmj?utm_source=generator&theme=0"
+            data-testid="embed-iframe"
+            style="border-radius:12px"
+            src="https://open.spotify.com/embed/artist/1WBvPa8B3lv2mzTYwkqRN8?utm_source=generator&theme=0"
             width="100%"
-            height="152"
+            height="352"
             frameBorder="0"
-            allowtransparency="true"
+            allowfullscreen=""
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
             loading="lazy">
         </iframe>
@@ -564,4 +565,3 @@
     </script>
 </body>
 </html>
-
