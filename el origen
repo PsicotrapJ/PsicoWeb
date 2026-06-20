@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>El Origen</title>
+</head>
+<body>
+  <h1>El Origen</h1>
+  <p>Acá va toda la info que quieras mostrar.</p>
+
+  <a href="index.html">Volver al inicio</a>
+</body>
+</html>
